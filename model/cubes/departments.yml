@@ -1,40 +1,56 @@
 cubes:
   - name: departments
-    sql_table: demo.departments
+    sql: SELECT * FROM gpc.departments
+    title: Departments
+    description: Department reference data (eCommerce, Retail, Wholesale, etc.)
 
-    joins: []
+    measures:
+      - name: department_count
+        type: count
+        description: Total number of departments
+
+      - name: active_department_count
+        type: count
+        filters:
+          - sql: "{CUBE}.isinactive = 'F'"
+        description: Number of active departments
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: number
         primary_key: true
 
-      - name: parent
-        sql: parent
-        type: number
+      - name: name
+        sql: "{CUBE}.name"
+        type: string
+        description: Department name (eCommerce, Retail, Wholesale)
 
       - name: fullname
-        sql: fullname
+        sql: "{CUBE}.fullname"
         type: string
+        description: Full department name
+
+      - name: parent
+        sql: "{CUBE}.parent"
+        type: number
+        description: Parent department ID
 
       - name: isinactive
-        sql: isinactive
-        type: boolean
-
-      - name: links
-        sql: links
+        sql: "{CUBE}.isinactive"
         type: string
+        description: Whether department is inactive (T/F)
 
-      - name: name
-        sql: name
-        type: string
-
-    measures:
-      - name: count
-        type: count
+    segments:
+      - name: active
+        sql: "{CUBE}.isinactive = 'F'"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: department_analysis
+        measures:
+          - department_count
+          - active_department_count
+        dimensions:
+          - name
+        refresh_key:
+          every: 24 hour

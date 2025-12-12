@@ -1,36 +1,40 @@
 cubes:
   - name: currencies
-    sql_table: demo.currencies
+    sql: SELECT * FROM gpc.currencies
+    title: Currencies
+    description: Currency reference data with exchange rates for multi-currency support
 
-    joins: []
+    measures:
+      - name: currency_count
+        type: count
+        description: Total number of currencies
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: number
         primary_key: true
 
-      - name: exchangerate
-        sql: exchangerate
-        type: string
-
-      - name: links
-        sql: links
-        type: string
-
       - name: name
-        sql: name
+        sql: "{CUBE}.name"
         type: string
+        description: Currency name (EUR, GBP, USD, etc.)
 
       - name: symbol
-        sql: symbol
+        sql: "{CUBE}.symbol"
         type: string
+        description: Currency symbol
 
-    measures:
-      - name: count
-        type: count
+      - name: exchangerate
+        sql: "{CUBE}.exchangerate"
+        type: number
+        description: Exchange rate to base currency
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: currency_analysis
+        measures:
+          - currency_count
+        dimensions:
+          - name
+        refresh_key:
+          every: 24 hour

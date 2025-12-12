@@ -1,0 +1,112 @@
+# DEPRECATED: This cube has a design flaw - it mixes all-time sales with point-in-time inventory
+# Result: Meaningless ratios like "all sales ever / today's stock"
+# REPLACEMENT: Use sell_through_seasonal.yml for accurate season-based sell-through analysis
+# TODO: Remove this cube after migrating all dashboards to sell_through_seasonal
+
+cubes:
+  - name: sell_through
+    sql: >
+      SELECT
+        i.id as item_id,
+        i.itemid,
+        i.displayname,
+        i.custitem_gpc_category as category,
+        i.custitem_gpc_sections as section,
+        i.custitem_gpc_season as season,
+        COALESCE(inv.current_stock, 0) as current_stock,
+        COALESCE(sales.units_sold, 0) as units_sold,
+        sales.transaction_type
+      FROM gpc.items i
+      LEFT JOIN (
+        SELECT item, CAST(SUM(calculated_quantity_available) AS FLOAT64) as current_stock
+        FROM gpc.inventory_calculated
+        GROUP BY item
+      ) inv ON i.id = inv.item
+      LEFT JOIN (
+        SELECT tl.item, t.type as transaction_type, CAST(SUM(CASE WHEN tl.quantity < 0 THEN ABS(tl.quantity) ELSE 0 END) AS FLOAT64) as units_sold
+        FROM gpc.transaction_lines_clean tl
+        JOIN gpc.transactions_clean t ON tl.transaction = t.id
+        GROUP BY tl.item, t.type
+      ) sales ON i.id = sales.item
+    title: Sell Through Analysis
+    description: Product sell-through rates combining sales and inventory (STR001/PP058). Uses transaction_lines_clean and transactions_clean for consistent filtering with other revenue cubes.
+
+    measures:
+      - name: total_units_sold
+        sql: "{CUBE}.units_sold"
+        type: sum
+        description: Total units sold
+
+      - name: total_current_stock
+        sql: "{CUBE}.current_stock"
+        type: sum
+        description: Total current stock
+
+      - name: sell_through_rate
+        sql: "100.0 * SUM({CUBE}.units_sold) / NULLIF(SUM({CUBE}.units_sold) + SUM({CUBE}.current_stock), 0)"
+        type: number
+        description: Sell-through rate percentage (STR001/PP058)
+
+      - name: item_count
+        type: count
+        description: Number of items
+
+    dimensions:
+      - name: item_id
+        sql: "{CUBE}.item_id"
+        type: number
+        primary_key: true
+
+      - name: itemid
+        sql: "{CUBE}.itemid"
+        type: string
+        title: SKU
+        description: Item SKU code
+
+      - name: displayname
+        sql: "{CUBE}.displayname"
+        type: string
+        description: Product name
+
+      - name: category
+        sql: "{CUBE}.category"
+        type: string
+        description: Product category
+
+      - name: section
+        sql: "{CUBE}.section"
+        type: string
+        description: Product section (e.g., Hoodies, Fleeces, Sweatshirts, Leggings)
+
+      - name: season
+        sql: "{CUBE}.season"
+        type: string
+        description: Product season
+
+      - name: transaction_type
+        sql: "{CUBE}.transaction_type"
+        type: string
+        description: "Transaction type: SalesOrd, CustInvc, CashSale. Previously hardcoded to CustInvc/CashSale only. Now parameterized for flexible filtering."
+
+    segments:
+      - name: has_sales
+        sql: "{CUBE}.units_sold > 0"
+
+      - name: has_stock
+        sql: "{CUBE}.current_stock > 0"
+
+    pre_aggregations:
+      # Sell-through by category and season
+      - name: sell_through_analysis
+        measures:
+          - total_units_sold
+          - total_current_stock
+          - item_count
+          # Removed calculated measure:
+          # - sell_through_rate (use component measures instead)
+        dimensions:
+          - category
+          - section
+          - season
+        refresh_key:
+          every: 24 hour

@@ -1,36 +1,51 @@
 cubes:
   - name: classifications
-    sql_table: demo.classifications
+    sql: SELECT * FROM gpc.classifications
+    title: Classifications
+    description: Business classification hierarchy (EU Website, UK Website, Kildare Village, etc.)
 
-    joins: []
+    measures:
+      - name: classification_count
+        type: count
+        description: Total number of classifications
+
+      - name: active_count
+        type: count
+        filters:
+          - sql: "{CUBE}.isinactive = 'F'"
+        description: Number of active classifications
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: number
         primary_key: true
 
+      - name: name
+        sql: "{CUBE}.name"
+        type: string
+        description: Classification name (EU Website, UK Website, Kildare Village, etc.)
+
       - name: parent
-        sql: parent
+        sql: "{CUBE}.parent"
         type: number
+        description: Parent classification ID for hierarchy
 
       - name: isinactive
-        sql: isinactive
-        type: boolean
-
-      - name: links
-        sql: links
+        sql: "{CUBE}.isinactive"
         type: string
+        description: Whether classification is inactive (T/F)
 
-      - name: name
-        sql: name
-        type: string
-
-    measures:
-      - name: count
-        type: count
+    segments:
+      - name: active
+        sql: "{CUBE}.isinactive = 'F'"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: classification_analysis
+        measures:
+          - classification_count
+          - active_count
+        dimensions:
+          - name
+        refresh_key:
+          every: 24 hour

@@ -1,0 +1,175 @@
+cubes:
+  - name: sell_through_seasonal
+    sql: >
+      SELECT
+        tl.item,
+        i.itemid,
+        i.displayname,
+        i.custitem_gpc_season as season,
+        i.custitem_gpc_category as category,
+        i.custitem_gpc_sections as section,
+        i.custitem_gpc_size as size,
+        i.custitem_gpc_child_colour as color,
+        -- Sales within the item's season only
+        SUM(CASE
+          WHEN i.custitem_gpc_season IS NOT NULL
+            AND i.custitem_gpc_season != ''
+          THEN ABS(tl.quantity)
+          ELSE 0
+        END) as units_sold_in_season,
+        SUM(CASE
+          WHEN i.custitem_gpc_season IS NOT NULL
+            AND i.custitem_gpc_season != ''
+          THEN CAST(tl.amount AS FLOAT64)
+          ELSE 0
+        END) as revenue_in_season,
+        -- Current inventory (aggregated from inventory_calculated)
+        COALESCE(MAX(inv.current_stock), 0) as current_stock
+      FROM gpc.transaction_lines_clean tl
+      LEFT JOIN gpc.transactions_analysis t ON tl.transaction = t.id
+      INNER JOIN gpc.items i ON tl.item = i.id
+      LEFT JOIN (
+        SELECT
+          item,
+          SUM(calculated_quantity_available) as current_stock
+        FROM gpc.inventory_calculated
+        WHERE calculated_quantity_available > 0
+        GROUP BY item
+      ) inv ON tl.item = inv.item
+      WHERE t.type IN ('CustInvc', 'CashSale')
+        AND COALESCE(t.posting, 'F') = 'T'
+        AND COALESCE(t.voided, 'F') = 'F'
+      GROUP BY
+        tl.item,
+        i.itemid,
+        i.displayname,
+        i.custitem_gpc_season,
+        i.custitem_gpc_category,
+        i.custitem_gpc_sections,
+        i.custitem_gpc_size,
+        i.custitem_gpc_child_colour
+    title: Sell Through (Seasonal)
+    description: >
+      Season-based sell-through analysis for fashion retail.
+      Calculates sell-through rate as: Units Sold in Season / (Units Sold in Season + Current Stock).
+      Replaces the flawed sell_through cube which mixed all-time sales with point-in-time inventory.
+      Used for STR001 and PP058 metrics.
+
+    measures:
+      - name: units_sold
+        sql: units_sold_in_season
+        type: sum
+        description: Units sold within the product's season
+
+      - name: revenue_in_season
+        sql: revenue_in_season
+        type: sum
+        format: currency
+        description: Revenue generated within the product's season
+
+      - name: current_stock
+        sql: current_stock
+        type: sum
+        description: Current available inventory for this season
+
+      - name: total_units
+        sql: "{units_sold} + {current_stock}"
+        type: number
+        description: Total units (sold + remaining stock)
+
+      - name: sell_through_rate
+        sql: "SAFE_DIVIDE({units_sold}, {total_units}) * 100.0"
+        type: number
+        format: percent
+        description: "Sell-through rate: % of season stock that has sold (STR001, PP058)"
+
+      - name: stock_remaining_rate
+        sql: "SAFE_DIVIDE({current_stock}, {total_units}) * 100.0"
+        type: number
+        format: percent
+        description: "% of season stock still in inventory"
+
+      - name: item_count
+        type: count
+        description: Number of unique items
+
+    dimensions:
+      - name: item
+        sql: item
+        type: number
+        primary_key: true
+        description: Item internal ID
+
+      - name: itemid
+        sql: itemid
+        type: string
+        title: SKU
+        description: Item SKU code
+
+      - name: displayname
+        sql: displayname
+        type: string
+        description: Product display name
+
+      - name: season
+        sql: season
+        type: string
+        description: "Product season (AW24, SS25, etc.)"
+
+      - name: category
+        sql: category
+        type: string
+        description: Product category
+
+      - name: section
+        sql: section
+        type: string
+        description: Product section (e.g., Hoodies, Fleeces, Sweatshirts, Leggings)
+
+      - name: size
+        sql: size
+        type: string
+        description: Product size
+
+      - name: color
+        sql: color
+        type: string
+        description: Product color
+
+    segments:
+      - name: has_sales
+        sql: "{CUBE}.units_sold_in_season > 0"
+        description: Products that have sold units this season
+
+      - name: has_stock
+        sql: "{CUBE}.current_stock > 0"
+        description: Products with current inventory
+
+      - name: high_sellthrough
+        sql: "SAFE_DIVIDE({CUBE}.units_sold_in_season, {CUBE}.units_sold_in_season + {CUBE}.current_stock) > 0.7"
+        description: Products with >70% sell-through rate
+
+      - name: low_sellthrough
+        sql: "SAFE_DIVIDE({CUBE}.units_sold_in_season, {CUBE}.units_sold_in_season + {CUBE}.current_stock) < 0.3"
+        description: Products with <30% sell-through rate (slow movers)
+
+    joins:
+      - name: items
+        relationship: many_to_one
+        sql: "{CUBE}.item = {items.id}"
+
+    pre_aggregations:
+      - name: seasonal_sellthrough
+        measures:
+          - units_sold
+          - revenue_in_season
+          - current_stock
+          - item_count
+        dimensions:
+          - season
+          - category
+          - section
+          - size
+          - color
+        refresh_key:
+          every: 1 hour

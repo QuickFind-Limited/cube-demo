@@ -1,64 +1,76 @@
 cubes:
   - name: b2b_addresses
-    sql_table: demo.b2b_addresses
+    sql: SELECT * FROM gpc.b2b_addresses
+    title: B2B Addresses
+    description: B2B address reference data for shipping and billing
 
-    joins: []
+    measures:
+      - name: address_count
+        type: count
+        description: Total number of addresses
 
     dimensions:
       - name: address_id
-        sql: address_id
+        sql: "{CUBE}.address_id"
         type: number
         primary_key: true
 
-      - name: recordowner
-        sql: recordowner
-        type: number
+      - name: addressee
+        sql: "{CUBE}.addressee"
+        type: string
+        description: Addressee name
 
       - name: addr1
-        sql: addr1
+        sql: "{CUBE}.addr1"
         type: string
+        description: Address line 1
 
       - name: addr2
-        sql: addr2
+        sql: "{CUBE}.addr2"
         type: string
-
-      - name: addressee
-        sql: addressee
-        type: string
-
-      - name: addrphone
-        sql: addrphone
-        type: string
+        description: Address line 2
 
       - name: city
-        sql: city
+        sql: "{CUBE}.city"
         type: string
+        description: City
 
       - name: country
-        sql: country
+        sql: "{CUBE}.country"
         type: string
+        description: Country code
+
+      - name: addrphone
+        sql: "{CUBE}.addrphone"
+        type: string
+        description: Address phone number
 
       - name: full_address
-        sql: full_address
+        sql: "{CUBE}.full_address"
         type: string
-
-      - name: links
-        sql: links
-        type: string
-
-      - name: override
-        sql: override
-        type: boolean
+        description: Full formatted address
 
       - name: lastmodifieddate
-        sql: lastmodifieddate
+        sql: "CAST({CUBE}.lastmodifieddate AS TIMESTAMP)"
         type: time
+        description: Last modified date
 
-    measures:
-      - name: count
-        type: count
+      - name: override
+        sql: "{CUBE}.override"
+        type: string
+        description: Override flag (T/F)
+
+      - name: recordowner
+        sql: "{CUBE}.recordowner"
+        type: number
+        description: Record owner ID
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: address_analysis
+        measures:
+          - address_count
+        dimensions:
+          - country
+          - city
+        refresh_key:
+          every: 24 hour

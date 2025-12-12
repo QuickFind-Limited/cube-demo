@@ -1,40 +1,46 @@
 cubes:
   - name: subsidiaries
-    sql_table: demo.subsidiaries
+    sql: SELECT * FROM gpc.subsidiaries
+    title: Subsidiaries
+    description: Legal entity reference data for multi-entity accounting
 
-    joins: []
+    measures:
+      - name: subsidiary_count
+        type: count
+        description: Total number of subsidiaries
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: number
         primary_key: true
 
-      - name: currency
-        sql: currency
-        type: number
-
-      - name: country
-        sql: country
+      - name: name
+        sql: "{CUBE}.name"
         type: string
+        description: Subsidiary name
 
       - name: legalname
-        sql: legalname
+        sql: "{CUBE}.legalname"
         type: string
+        description: Legal company name
 
-      - name: links
-        sql: links
+      - name: country
+        sql: "{CUBE}.country"
         type: string
+        description: Country code (IE, GB)
 
-      - name: name
-        sql: name
-        type: string
-
-    measures:
-      - name: count
-        type: count
+      - name: currency
+        sql: "{CUBE}.currency"
+        type: number
+        description: Currency ID
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: subsidiary_analysis
+        measures:
+          - subsidiary_count
+        dimensions:
+          - name
+          - country
+        refresh_key:
+          every: 24 hour

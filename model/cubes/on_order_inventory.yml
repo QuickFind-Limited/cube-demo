@@ -1,0 +1,133 @@
+cubes:
+  - name: on_order_inventory
+    sql: >
+      SELECT
+        pol.id,
+        pol.po_id,
+        pol.item,
+        pol.quantity,
+        pol.quantityshiprecv,
+        pol.unit_cost,
+        (pol.quantity - COALESCE(pol.quantityshiprecv, 0)) as qty_on_order,
+        (pol.quantity - COALESCE(pol.quantityshiprecv, 0)) * pol.unit_cost as line_on_order_value,
+        po.status as po_status,
+        CAST(po.trandate AS TIMESTAMP) as po_date,
+        i.itemid,
+        i.displayname
+      FROM gpc.purchase_order_lines pol
+      LEFT JOIN gpc.purchase_orders po ON pol.po_id = po.id
+      LEFT JOIN gpc.items i ON pol.item = i.id
+      WHERE po.status IN ('B', 'D', 'E')
+        AND (pol.quantity - COALESCE(pol.quantityshiprecv, 0)) > 0
+
+    title: On-Order Inventory
+    description: Real-time outstanding PO quantities by item (calculated from open POs)
+
+    measures:
+      - name: total_on_order_units
+        sql: qty_on_order
+        type: sum
+        description: Total units on order across all open POs
+
+      - name: on_order_value
+        sql: line_on_order_value
+        type: sum
+        format: currency
+        description: Total value of on-order inventory
+
+      - name: avg_on_order_per_item
+        sql: qty_on_order
+        type: avg
+        description: Average units on order per item
+
+      - name: open_po_count
+        sql: po_id
+        type: count_distinct
+        description: Total number of open POs
+
+      - name: item_count
+        sql: item
+        type: count_distinct
+        description: Number of unique items with on-order inventory
+
+      - name: avg_pos_per_item
+        sql: po_id
+        type: count_distinct
+        description: Number of open POs (for averaging per item)
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+        public: false
+
+      - name: item
+        sql: item
+        type: number
+        title: Item ID
+        description: NetSuite item ID
+
+      - name: itemid
+        sql: itemid
+        type: string
+        title: SKU
+        description: Item SKU/ID
+
+      - name: displayname
+        sql: displayname
+        type: string
+        title: Product Name
+        description: Item display name
+
+      - name: qty_on_order
+        sql: qty_on_order
+        type: number
+        title: Units On Order
+        description: Units on order for this line
+
+      - name: po_status
+        sql: po_status
+        type: string
+        title: PO Status
+        description: Purchase order status
+
+      - name: po_date
+        sql: "CAST({CUBE}.po_date AS TIMESTAMP)"
+        type: time
+        title: PO Date
+        description: Purchase order date
+
+    joins:
+      - name: items
+        relationship: many_to_one
+        sql: "{CUBE}.item = {items}.id"
+
+    pre_aggregations:
+      - name: on_order_rollup
+        measures:
+          - total_on_order_units
+          - on_order_value
+          - open_po_count
+          - item_count
+        dimensions:
+          - item
+          - po_status
+        time_dimension: po_date
+        granularity: day
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        refresh_key:
+          every: 1 hour
+
+      # Rollup without dimensions for total queries
+      - name: on_order_totals
+        measures:
+          - total_on_order_units
+          - on_order_value
+          - open_po_count
+          - item_count
+        refresh_key:
+          every: 1 hour

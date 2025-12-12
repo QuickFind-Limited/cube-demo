@@ -1,52 +1,169 @@
 cubes:
   - name: fulfillment_lines
-    sql_table: demo.fulfillment_lines
+    sql: SELECT * FROM gpc.fulfillment_lines
+    title: Fulfillment Lines
+    description: Individual line items for fulfillments tracking what products were shipped
 
-    joins: []
+    joins:
+      - name: fulfillments
+        relationship: many_to_one
+        sql: "{CUBE}.transaction = {fulfillments.id}"
+
+      - name: transactions
+        relationship: many_to_one
+        sql: "{fulfillments}.entity = {transactions.id}"
+
+      - name: items
+        relationship: many_to_one
+        sql: "{CUBE}.item = {items.id}"
+
+      - name: locations
+        relationship: many_to_one
+        sql: "{CUBE}.location = {locations.id}"
+
+    measures:
+      - name: line_count
+        type: count
+        description: Total number of fulfillment lines
+
+      - name: units_shipped
+        sql: "CAST({CUBE}.quantity AS FLOAT64)"
+        type: sum
+        description: Total units shipped
+
+      - name: fulfillment_count
+        sql: "{CUBE}.transaction"
+        type: count_distinct_approx
+        description: Number of unique fulfillments
+
+      - name: sku_count
+        sql: "{CUBE}.item"
+        type: count_distinct
+        description: Number of unique SKUs shipped
+
+      - name: location_count
+        sql: "{CUBE}.location"
+        type: count_distinct
+        description: Number of shipping locations
+
+      - name: total_fulfillment_days
+        sql: "CAST(DATE_DIFF(CAST({CUBE}.shipdate AS DATE), CAST({transactions.trandate} AS DATE), DAY) AS FLOAT64)"
+        type: sum
+        description: Total days from order to ship (for averaging)
+
+      - name: average_fulfillment_days
+        sql: "1.0 * {total_fulfillment_days} / NULLIF({fulfillment_count}, 0)"
+        type: number
+        description: Average days from order to ship (FD002)
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: number
         primary_key: true
 
-      - name: createdfrom
-        sql: createdfrom
+      - name: transaction
+        sql: "{CUBE}.transaction"
         type: number
+        description: Parent fulfillment ID
+
+      - name: createdfrom
+        sql: "{CUBE}.createdfrom"
+        type: number
+        description: Source order ID
 
       - name: item
-        sql: item
+        sql: "{CUBE}.item"
         type: number
+        description: Item ID
 
       - name: location
-        sql: location
+        sql: "{CUBE}.location"
         type: number
+        description: Shipping location ID
 
       - name: quantity
-        sql: quantity
+        sql: "{CUBE}.quantity"
         type: number
+        description: Quantity shipped
 
       - name: quantityshiprecv
-        sql: quantityshiprecv
+        sql: "{CUBE}.quantityshiprecv"
         type: number
-
-      - name: transaction
-        sql: transaction
-        type: number
-
-      - name: links
-        sql: links
-        type: string
+        description: Quantity shipped/received
 
       - name: shipdate
-        sql: shipdate
+        sql: "CAST({CUBE}.shipdate AS TIMESTAMP)"
         type: time
+        description: Ship date
 
-    measures:
-      - name: count
-        type: count
+      - name: month
+        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.shipdate AS TIMESTAMP), MONTH)"
+        type: time
+        description: Ship month
+
+    segments:
+      - name: shipped_lines
+        sql: "{CUBE}.quantity > 0"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+      # Fulfillment line analysis
+      - name: fulfillment_lines_analysis
+        measures:
+          - line_count
+          - units_shipped
+          - fulfillment_count
+          - sku_count
+          - location_count
+          - total_fulfillment_days
+          # Removed: average_fulfillment_days (calculated - references count_distinct_approx)
+        dimensions:
+          - location
+          - locations.name
+        time_dimension: shipdate
+        granularity: day
+        partition_granularity: month
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        indexes:
+          - name: location_idx
+            columns:
+              - location
+        refresh_key:
+          every: 24 hour
 
+      # Item-level fulfillment tracking
+      - name: item_fulfillment_analysis
+        measures:
+          - units_shipped
+          - fulfillment_count
+        dimensions:
+          - item
+          - location
+        time_dimension: shipdate
+        granularity: day
+        partition_granularity: month
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        indexes:
+          - name: item_idx
+            columns:
+              - item
+        refresh_key:
+          every: 24 hour
+
+      # Snapshot pre-agg for location-based queries without time filtering
+      - name: location_snapshot
+        measures:
+          - fulfillment_count
+          - line_count
+          - units_shipped
+        dimensions:
+          - location
+          - locations.name
+        refresh_key:
+          every: 24 hour

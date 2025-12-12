@@ -1,92 +1,124 @@
 cubes:
   - name: purchase_orders
-    sql_table: demo.purchase_orders
+    sql_table: gpc.purchase_orders
 
-    joins: []
+    title: Purchase Orders
+    description: Purchase order transaction headers from suppliers
+
+    measures:
+      - name: po_count
+        type: count
+        description: Number of purchase orders
+
+      - name: total_po_value
+        sql: total
+        type: sum
+        format: currency
+        description: Total PO value in EUR (base currency)
+
+      - name: avg_po_value
+        sql: total
+        type: avg
+        format: currency
+        description: Average PO value
+
+      - name: pending_receipt_count
+        type: count
+        filters:
+          - sql: "{CUBE}.status = 'B'"
+        description: POs pending receipt (status B)
+
+      - name: partially_received_count
+        type: count
+        filters:
+          - sql: "{CUBE}.status = 'D'"
+        description: POs partially received (status D)
+
+      - name: pending_billing_count
+        type: count
+        filters:
+          - sql: "{CUBE}.status = 'E'"
+        description: POs pending billing (status E)
+
+      - name: open_po_count
+        type: count
+        filters:
+          - sql: "{CUBE}.status IN ('B', 'D', 'E')"
+        description: Open POs (pending receipt, partially received, or pending billing)
 
     dimensions:
       - name: id
         sql: id
         type: number
         primary_key: true
-
-      - name: currency
-        sql: currency
-        type: number
-
-      - name: entity
-        sql: entity
-        type: number
-
-      - name: postingperiod
-        sql: postingperiod
-        type: number
-
-      - name: subsidiary
-        sql: subsidiary
-        type: number
-
-      - name: closedate
-        sql: closedate
-        type: string
-
-      - name: createddate
-        sql: createddate
-        type: string
-
-      - name: exchangerate
-        sql: exchangerate
-        type: string
-
-      - name: foreigntotal
-        sql: foreigntotal
-        type: string
-
-      - name: lastmodifieddate
-        sql: lastmodifieddate
-        type: string
-
-      - name: links
-        sql: links
-        type: string
-
-      - name: memo
-        sql: memo
-        type: string
-
-      - name: posting
-        sql: posting
-        type: boolean
-
-      - name: status
-        sql: status
-        type: string
-
-      - name: total
-        sql: total
-        type: string
-
-      - name: trandate
-        sql: trandate
-        type: string
+        public: false
 
       - name: tranid
         sql: tranid
         type: string
+        title: PO Number
+        description: Purchase order transaction number
 
-      - name: type
-        sql: type
+      - name: trandate
+        sql: trandate
+        type: time
+        title: PO Date
+        description: Purchase order transaction date
+
+      - name: status
+        sql: status
         type: string
+        title: PO Status
+        description: Purchase order status code (A=Pending Approval, B=Pending Receipt, D=Partially Received, E=Pending Billing, F=Fully Billed, G=Closed)
 
-      - name: voided
-        sql: voided
-        type: boolean
+      - name: supplier
+        sql: entity
+        type: number
+        title: Supplier ID
+        description: Vendor entity ID
 
-    measures:
-      - name: count
-        type: count
+      - name: currency
+        sql: currency
+        type: string
+        title: Currency
+        description: Transaction currency code
+
+      - name: exchangerate
+        sql: exchangerate
+        type: number
+        title: Exchange Rate
+        description: Currency exchange rate to base currency
+
+      - name: foreigntotal
+        sql: foreigntotal
+        type: number
+        format: currency
+        title: Foreign Total
+        description: Total in foreign currency
+
+      - name: memo
+        sql: memo
+        type: string
+        title: Memo
+        description: PO memo field
+
+    joins:
+      - name: purchase_order_lines
+        relationship: one_to_many
+        sql: "{CUBE}.id = {purchase_order_lines}.po_id"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: po_summary
+        measures:
+          - po_count
+          - total_po_value
+          - avg_po_value
+          - pending_receipt_count
+          - partially_received_count
+          - pending_billing_count
+          - open_po_count
+        dimensions:
+          - status
+          - supplier
+        refresh_key:
+          every: 1 hour

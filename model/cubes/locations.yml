@@ -1,40 +1,97 @@
 cubes:
   - name: locations
-    sql_table: demo.locations
+    sql: SELECT * FROM gpc.locations
+    title: Locations
+    description: Warehouse and store locations with centralized channel type logic
 
-    joins: []
+    measures:
+      - name: location_count
+        type: count
+        description: Total number of locations
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: number
         primary_key: true
 
-      - name: mainaddress
-        sql: mainaddress
-        type: number
-
-      - name: subsidiary
-        sql: subsidiary
-        type: number
-
-      - name: isinactive
-        sql: isinactive
-        type: boolean
-
-      - name: links
-        sql: links
-        type: string
-
       - name: name
-        sql: name
+        sql: "{CUBE}.name"
         type: string
+        description: Location name
 
-    measures:
-      - name: count
-        type: count
+      # CRITICAL: Centralized channel type logic - Rule 4
+      - name: channel_type
+        sql: >
+          CASE
+            WHEN {CUBE}.name IS NULL THEN 'D2C'
+            WHEN {CUBE}.name LIKE 'Bleckmann%' AND {CUBE}.name NOT LIKE '%Quarantine%' AND {CUBE}.name NOT LIKE '%Miscellaneous%' THEN 'D2C'
+            WHEN {CUBE}.name IN ('Meteor Space', '2Flow') THEN 'D2C'
+            WHEN {CUBE}.name IN (
+              'Dundrum Town Centre', 'Mahon Point', 'Crescent Centre', 'Liffey Valley',
+              'Kildare Village', 'Blanchardstown Centre', 'Galway', 'Swords Pavillon', 'Jervis Centre',
+              'Westfield London', 'Manchester', 'Belfast', 'Liverpool'
+            ) THEN 'RETAIL'
+            WHEN {CUBE}.name LIKE 'Wholesale%' THEN 'B2B_WHOLESALE'
+            WHEN {CUBE}.name LIKE 'Lifestyle Sports%' AND {CUBE}.name NOT LIKE '%Quarantine%' THEN 'B2B_WHOLESALE'
+            WHEN {CUBE}.name IN ('Otrium', 'The Very Group', 'Digme', 'Academy Crests') THEN 'PARTNER'
+            WHEN {CUBE}.name LIKE 'Events%' THEN 'EVENTS'
+            ELSE 'OTHER'
+          END
+        type: string
+        description: "Channel type: D2C, RETAIL, B2B_WHOLESALE, PARTNER, EVENTS, OTHER"
+
+      - name: location_type
+        sql: >
+          CASE
+            WHEN {CUBE}.name IN (
+              'Dundrum Town Centre', 'Mahon Point', 'Crescent Centre', 'Liffey Valley',
+              'Kildare Village', 'Blanchardstown Centre', 'Galway', 'Swords Pavillon', 'Jervis Centre',
+              'Westfield London', 'Manchester', 'Belfast', 'Liverpool'
+            ) THEN 'RETAIL'
+            WHEN {CUBE}.name LIKE 'Bleckmann%' AND {CUBE}.name NOT LIKE '%Quarantine%' AND {CUBE}.name NOT LIKE '%Miscellaneous%' THEN 'FULFILLMENT'
+            WHEN {CUBE}.name IN ('Meteor Space', '2Flow') THEN 'FULFILLMENT'
+            WHEN {CUBE}.name LIKE 'Wholesale%' THEN 'WHOLESALE'
+            WHEN {CUBE}.name LIKE 'Lifestyle Sports B2B%' THEN 'B2B_PARTNER'
+            WHEN {CUBE}.name IN ('The Very Group', '2Flow') THEN 'B2B_PARTNER'
+            WHEN {CUBE}.name IN ('Otrium', 'Digme', 'Academy Crests', 'PCH-UK') THEN 'MARKETPLACE'
+            WHEN {CUBE}.name LIKE '%Quarantine%' OR {CUBE}.name LIKE '%Miscellaneous%' OR {CUBE}.name = 'Kildare B Stock' THEN 'RETURNS_QC'
+            WHEN {CUBE}.name LIKE 'Events%' THEN 'EVENTS'
+            WHEN {CUBE}.name LIKE 'Headquarters%' THEN 'HQ_ADMIN'
+            WHEN {CUBE}.name LIKE 'PCH China%' THEN 'SOURCING'
+            ELSE 'OTHER'
+          END
+        type: string
+        description: "Location type: RETAIL, FULFILLMENT, WHOLESALE, B2B_PARTNER, MARKETPLACE, RETURNS_QC, EVENTS, HQ_ADMIN, SOURCING, OTHER"
+
+      - name: region
+        sql: >
+          CASE
+            WHEN {CUBE}.subsidiary = 2
+              AND {CUBE}.name NOT LIKE 'Bleckmann%'
+              AND {CUBE}.name NOT LIKE 'PCH China%'
+            THEN 'IRELAND'
+            WHEN {CUBE}.subsidiary = 6
+              AND {CUBE}.name NOT LIKE 'Bleckmann Australia%'
+              AND {CUBE}.name NOT LIKE 'Bleckmann Aussie%'
+              AND {CUBE}.name NOT LIKE 'Bleckmann USA%'
+            THEN 'UK'
+            WHEN {CUBE}.name LIKE 'Bleckmann BE%' THEN 'EU'
+            WHEN {CUBE}.name = 'Bleckmann UK' THEN 'UK'
+            WHEN {CUBE}.name LIKE 'Bleckmann UK%' THEN 'UK'
+            WHEN {CUBE}.name = 'Bleckmann Swindon' THEN 'UK'
+            ELSE 'GLOBAL'
+          END
+        type: string
+        description: "Location region: IRELAND (sub 2), UK (sub 6), EU (Bleckmann BE), GLOBAL (overseas warehouses)"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: location_analysis
+        measures:
+          - location_count
+        dimensions:
+          - channel_type
+          - location_type
+          - region
+        refresh_key:
+          every: 24 hour

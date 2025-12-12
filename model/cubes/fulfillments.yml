@@ -1,48 +1,119 @@
 cubes:
   - name: fulfillments
-    sql_table: demo.fulfillments
+    sql: SELECT * FROM gpc.fulfillments
+    title: Fulfillments
+    description: Item fulfillment records tracking shipments and deliveries
 
-    joins: []
+    joins:
+      - name: transactions
+        relationship: many_to_one
+        sql: "{CUBE}.entity = {transactions.id}"
+
+    measures:
+      - name: fulfillment_count
+        type: count
+        description: Total number of fulfillments
+
+      - name: unique_orders
+        sql: "{CUBE}.entity"
+        type: count_distinct_approx
+        description: Number of unique orders fulfilled
+
+      - name: shipped_count
+        type: count
+        filters:
+          - sql: "{CUBE}.status = 'C'"
+        description: Number of shipped fulfillments
+
+      - name: pending_count
+        type: count
+        filters:
+          - sql: "{CUBE}.status = 'A'"
+        description: Number of pending fulfillments
+
+      - name: fulfillments_per_order
+        sql: "1.0 * {fulfillment_count} / NULLIF({unique_orders}, 0)"
+        type: number
+        description: Average fulfillments per order (FD003)
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: number
         primary_key: true
 
       - name: entity
-        sql: entity
+        sql: "{CUBE}.entity"
         type: number
-
-      - name: shipmethod
-        sql: shipmethod
-        type: number
-
-      - name: links
-        sql: links
-        type: string
-
-      - name: shipcarrier
-        sql: shipcarrier
-        type: string
-
-      - name: status
-        sql: status
-        type: string
+        description: Related entity/order ID
 
       - name: tranid
-        sql: tranid
+        sql: "{CUBE}.tranid"
         type: string
+        title: Fulfillment Number
+        description: Fulfillment transaction ID (e.g., IF279014)
 
       - name: trandate
-        sql: trandate
+        sql: "CAST({CUBE}.trandate AS TIMESTAMP)"
         type: time
+        description: Fulfillment date
 
-    measures:
-      - name: count
-        type: count
+      - name: month
+        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), MONTH)"
+        type: time
+        description: Fulfillment month
+
+      - name: status
+        sql: "{CUBE}.status"
+        type: string
+        description: "Fulfillment status: A (Pending), B (Picked), C (Shipped)"
+
+      - name: status_name
+        sql: >
+          CASE
+            WHEN {CUBE}.status = 'A' THEN 'Pending'
+            WHEN {CUBE}.status = 'B' THEN 'Picked'
+            WHEN {CUBE}.status = 'C' THEN 'Shipped'
+            ELSE 'Unknown'
+          END
+        type: string
+        description: Human-readable fulfillment status
+
+      - name: shipcarrier
+        sql: "{CUBE}.shipcarrier"
+        type: string
+        description: Shipping carrier name
+
+      - name: shipmethod
+        sql: "{CUBE}.shipmethod"
+        type: number
+        description: Shipping method ID
+
+    segments:
+      - name: shipped
+        sql: "{CUBE}.status = 'C'"
+
+      - name: pending
+        sql: "{CUBE}.status = 'A'"
+
+      - name: picked
+        sql: "{CUBE}.status = 'B'"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      # Fulfillment status analysis
+      - name: fulfillment_analysis
+        measures:
+          - fulfillment_count
+          - unique_orders
+          - shipped_count
+          - pending_count
+          # Removed calculated measure:
+          # - fulfillments_per_order (calculated - makes pre-agg non-additive)
+        dimensions:
+          - status
+          - status_name
+          - shipcarrier
+        time_dimension: trandate
+        granularity: day
+        refresh_key:
+          every: 24 hour

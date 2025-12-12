@@ -1,0 +1,154 @@
+cubes:
+  - name: order_baskets
+    sql: >
+      SELECT
+        tl.transaction as order_id,
+        CAST(t.trandate AS TIMESTAMP) as trandate,
+        t.type,
+        t.custbody_customer_email as customer_email,
+        t.billing_country,
+        CAST(COUNT(*) AS FLOAT64) as line_count,
+        CAST(SUM(CASE WHEN tl.quantity < 0 THEN ABS(tl.quantity) ELSE 0 END) AS FLOAT64) as units,
+        CAST(SUM(tl.amount * -1) AS FLOAT64) as order_total,
+        CASE
+          WHEN COUNT(*) = 1 THEN '1 item'
+          WHEN COUNT(*) = 2 THEN '2 items'
+          WHEN COUNT(*) = 3 THEN '3 items'
+          ELSE '4+ items'
+        END as line_count_bucket,
+        CASE
+          WHEN b2b.id IS NOT NULL THEN 'B2B/Wholesale'
+          ELSE 'Retail/D2C'
+        END as customer_type
+      FROM gpc.transaction_lines_clean tl
+      JOIN gpc.transactions_clean t ON tl.transaction = t.id
+      LEFT JOIN gpc.b2b_customers b2b ON t.entity = b2b.id
+      GROUP BY tl.transaction, CAST(t.trandate AS TIMESTAMP), t.type, t.custbody_customer_email, t.billing_country, customer_type
+    title: Order Baskets
+    description: Order-level basket analysis with line count buckets (BASK003)
+
+    measures:
+      - name: order_count
+        type: count
+        description: Total number of orders
+
+      - name: total_revenue
+        sql: "{CUBE}.order_total"
+        type: sum
+        format: currency
+        description: Total revenue
+
+      - name: total_units
+        sql: "{CUBE}.units"
+        type: sum
+        description: Total units sold
+
+      - name: average_basket_size
+        sql: "1.0 * SUM({CUBE}.line_count) / NULLIF(COUNT(*), 0)"
+        type: number
+        description: Average items per basket
+
+      - name: average_order_value
+        sql: "{CUBE}.order_total"
+        type: avg
+        format: currency
+        description: Average order value
+
+      - name: total_line_count
+        sql: "CAST({CUBE}.line_count AS FLOAT64)"
+        type: sum
+        description: Total line count across all orders
+
+    dimensions:
+      - name: order_id
+        sql: "{CUBE}.order_id"
+        type: number
+        primary_key: true
+
+      # Parameterized Time Dimension - Default: "Last 12 months"
+      - name: trandate
+        sql: "{CUBE}.trandate"
+        type: time
+        description: "Order date - PARAMETERIZED: Use timeDimensions with dateRange (default: 'last 12 months')"
+
+      - name: month
+        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), MONTH)"
+        type: time
+        description: Order month
+
+      - name: type
+        sql: "{CUBE}.type"
+        type: string
+        description: "Transaction type: SalesOrd, CustInvc, CashSale. Previously hardcoded to CustInvc/CashSale only. Now parameterized for flexible filtering."
+
+      - name: customer_email
+        sql: "{CUBE}.customer_email"
+        type: string
+        description: Customer email
+
+      - name: billing_country
+        sql: "{CUBE}.billing_country"
+        type: string
+        description: Billing country
+
+      - name: line_count
+        sql: "{CUBE}.line_count"
+        type: number
+        description: Number of line items in order
+
+      - name: line_count_bucket
+        sql: "{CUBE}.line_count_bucket"
+        type: string
+        description: Line count bucket for BASK003
+
+      - name: units
+        sql: "{CUBE}.units"
+        type: number
+        description: Total units in order
+
+      - name: order_total
+        sql: "{CUBE}.order_total"
+        type: number
+        description: Order total amount
+
+      # NEW v57: B2B/Wholesale Customer Segmentation
+      - name: customer_type
+        sql: "{CUBE}.customer_type"
+        type: string
+        title: Customer Type
+        description: "Customer segmentation: B2B/Wholesale vs Retail/D2C. CRITICAL for basket size analysis - B2B customers have different order patterns than Retail/D2C customers. See SKILL v57 Golden Rule #14."
+
+    segments:
+      - name: single_item
+        sql: "{CUBE}.line_count = 1"
+
+      - name: multi_item
+        sql: "{CUBE}.line_count > 1"
+
+      - name: large_basket
+        sql: "{CUBE}.line_count >= 4"
+
+    pre_aggregations:
+      # Basket analysis by country and bucket
+      # V57: Added customer_type for B2B/Wholesale vs Retail/D2C segmentation
+      - name: basket_analysis
+        measures:
+          - order_count
+          - total_revenue
+          - total_units
+          - average_order_value
+          - total_line_count
+        dimensions:
+          - billing_country
+          - line_count_bucket
+          - type
+          - customer_type        # B2B/Wholesale vs Retail/D2C (NEW v57)
+        time_dimension: trandate
+        granularity: month
+        partition_granularity: month
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        refresh_key:
+          every: 24 hour

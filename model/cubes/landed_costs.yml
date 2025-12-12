@@ -1,0 +1,121 @@
+cubes:
+  - name: landed_costs
+    sql: >
+      SELECT
+        tl.transaction,
+        tl.id as line_id,
+        tl.item,
+        CAST(tl.amount AS FLOAT64) as landed_cost_amount,
+        CAST(tl.foreignamount AS FLOAT64) as foreign_landed_cost,
+        CAST(tl.estgrossprofit AS FLOAT64) as estimated_gross_profit,
+        CAST(tl.estgrossprofitpercent AS FLOAT64) as estimated_gp_percent,
+        CAST(tl.subsidiary AS INT64) as subsidiary_id,
+        t.trandate as receipt_date,
+        t.tranid as receipt_number,
+        t.type as transaction_type
+      FROM gpc.transaction_lines tl
+      INNER JOIN gpc.transactions t ON tl.transaction = t.id
+      WHERE t.type = 'ItemRcpt'
+        AND tl.blandedcost = 'T'
+        AND tl.mainline = FALSE
+
+    title: Landed Costs Analysis
+    description: >
+      Landed costs (freight, duties, customs) from Item Receipts. Identified by blandedcost='T' flag.
+      These are additional costs added to inventory beyond the base item cost.
+      Use for freight analysis, duty tracking, and total cost of goods calculations.
+
+    measures:
+      - name: total_landed_costs
+        sql: "{CUBE}.landed_cost_amount"
+        type: sum
+        format: currency
+        description: "Total landed costs (freight + duties) for Item Receipts (LAND001)"
+
+      - name: total_foreign_landed_costs
+        sql: "{CUBE}.foreign_landed_cost"
+        type: sum
+        format: currency
+        description: "Landed costs in foreign currency before conversion"
+
+      - name: avg_landed_cost_per_receipt
+        sql: "{total_landed_costs} / NULLIF({receipt_count}, 0)"
+        type: number
+        format: currency
+        description: "Average landed cost per item receipt transaction"
+
+      - name: receipt_count
+        type: count_distinct
+        sql: "{CUBE}.transaction"
+        description: "Number of unique item receipt transactions with landed costs"
+
+      - name: landed_cost_line_count
+        type: count
+        description: "Number of individual landed cost line items"
+
+    dimensions:
+      - name: transaction
+        sql: "{CUBE}.transaction"
+        type: number
+        primary_key: true
+        description: "Item Receipt transaction ID"
+
+      - name: line_id
+        sql: "{CUBE}.line_id"
+        type: number
+        description: "Transaction line ID"
+
+      - name: item
+        sql: "{CUBE}.item"
+        type: number
+        description: "Item ID (for landed cost allocation)"
+
+      - name: receipt_number
+        sql: "{CUBE}.receipt_number"
+        type: string
+        description: "Item Receipt document number"
+
+      - name: transaction_type
+        sql: "{CUBE}.transaction_type"
+        type: string
+        description: "Transaction type (should always be ItemRcpt)"
+
+      - name: receipt_date
+        sql: "CAST({CUBE}.receipt_date AS TIMESTAMP)"
+        type: time
+        description: "Date of item receipt"
+
+      - name: subsidiary_id
+        sql: "{CUBE}.subsidiary_id"
+        type: number
+        description: "Subsidiary ID where receipt was recorded"
+
+    joins:
+      - name: items
+        relationship: many_to_one
+        sql: "{CUBE}.item = {items.id}"
+
+      - name: subsidiaries
+        relationship: many_to_one
+        sql: "{CUBE}.subsidiary_id = {subsidiaries.id}"
+
+    pre_aggregations:
+      # Monthly landed costs by item
+      - name: monthly_landed_costs
+        measures:
+          - total_landed_costs
+          - total_foreign_landed_costs
+          - receipt_count
+          - landed_cost_line_count
+        dimensions:
+          - item
+          - subsidiary_id
+        time_dimension: receipt_date
+        granularity: month
+        partition_granularity: month
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        refresh_key:
+          every: 24 hour

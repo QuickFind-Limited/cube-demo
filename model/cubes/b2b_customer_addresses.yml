@@ -1,72 +1,107 @@
 cubes:
   - name: b2b_customer_addresses
-    sql_table: demo.b2b_customer_addresses
+    sql: SELECT * FROM gpc.b2b_customer_addresses
+    title: B2B Customer Addresses
+    description: Junction table linking B2B customers to their address book entries
 
-    joins: []
+    joins:
+      - name: b2b_customers
+        relationship: many_to_one
+        sql: "{CUBE}.customer_id = {b2b_customers.id}"
+
+    measures:
+      - name: address_count
+        type: count
+        description: Total number of customer address entries
+
+      - name: customer_count
+        sql: "{CUBE}.customer_id"
+        type: count_distinct
+        description: Number of customers with addresses
 
     dimensions:
       - name: address_id
-        sql: address_id
+        sql: "{CUBE}.address_id"
         type: number
         primary_key: true
 
       - name: customer_id
-        sql: customer_id
+        sql: "{CUBE}.customer_id"
         type: number
-
-      - name: addr1
-        sql: addr1
-        type: string
-
-      - name: addr2
-        sql: addr2
-        type: string
+        description: Customer ID
 
       - name: address_label
-        sql: address_label
+        sql: "{CUBE}.address_label"
         type: string
+        description: Address label/name
 
       - name: addressee
-        sql: addressee
+        sql: "{CUBE}.addressee"
         type: string
+        description: Addressee name
 
-      - name: addrphone
-        sql: addrphone
+      - name: addr1
+        sql: "{CUBE}.addr1"
         type: string
+        description: Address line 1
+
+      - name: addr2
+        sql: "{CUBE}.addr2"
+        type: string
+        description: Address line 2
 
       - name: city
-        sql: city
+        sql: "{CUBE}.city"
         type: string
+        description: City
 
       - name: country
-        sql: country
+        sql: "{CUBE}.country"
         type: string
+        description: Country code
 
-      - name: defaultbilling
-        sql: defaultbilling
-        type: boolean
-
-      - name: defaultshipping
-        sql: defaultshipping
-        type: boolean
+      - name: addrphone
+        sql: "{CUBE}.addrphone"
+        type: string
+        description: Address phone number
 
       - name: full_address
-        sql: full_address
+        sql: "{CUBE}.full_address"
         type: string
+        description: Full formatted address
+
+      - name: defaultbilling
+        sql: "{CUBE}.defaultbilling"
+        type: string
+        description: Is default billing address (T/F)
+
+      - name: defaultshipping
+        sql: "{CUBE}.defaultshipping"
+        type: string
+        description: Is default shipping address (T/F)
 
       - name: isresidential
-        sql: isresidential
-        type: boolean
-
-      - name: links
-        sql: links
+        sql: "{CUBE}.isresidential"
         type: string
+        description: Is residential address (F for business)
 
-    measures:
-      - name: count
-        type: count
+    segments:
+      - name: default_billing
+        sql: "{CUBE}.defaultbilling = 'T'"
+
+      - name: default_shipping
+        sql: "{CUBE}.defaultshipping = 'T'"
+
+      - name: business_addresses
+        sql: "{CUBE}.isresidential = 'F'"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: customer_address_analysis
+        measures:
+          - address_count
+          - customer_count
+        dimensions:
+          - country
+          - city
+        refresh_key:
+          every: 24 hour

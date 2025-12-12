@@ -1,116 +1,131 @@
 cubes:
   - name: purchase_order_lines
-    sql_table: demo.purchase_order_lines
+    sql_table: gpc.purchase_order_lines
 
-    joins: []
+    title: Purchase Order Lines
+    description: Purchase order line items with quantity, cost, and receipt tracking
+
+    measures:
+      - name: line_count
+        type: count
+        description: Number of PO line items
+
+      - name: total_ordered_qty
+        sql: quantity
+        type: sum
+        description: Total quantity ordered
+
+      - name: total_received_qty
+        sql: quantityshiprecv
+        type: sum
+        description: Total quantity received
+
+      - name: total_outstanding_qty
+        sql: "quantity - COALESCE(quantityshiprecv, 0)"
+        type: sum
+        description: Outstanding quantity not yet received
+
+      - name: total_po_line_value
+        sql: line_total
+        type: sum
+        format: currency
+        description: Total PO line value in base currency
+
+      - name: on_order_value
+        sql: "(quantity - COALESCE(quantityshiprecv, 0)) * unit_cost"
+        type: sum
+        format: currency
+        description: Value of outstanding orders (qty outstanding * unit cost)
+
+      - name: avg_unit_cost
+        sql: unit_cost
+        type: avg
+        format: currency
+        description: Average unit cost
+
+      - name: fulfillment_rate
+        sql: "CASE WHEN quantity > 0 THEN (COALESCE(quantityshiprecv, 0) / quantity) * 100 ELSE 0 END"
+        type: avg
+        format: percent
+        description: Average fulfillment rate (received / ordered * 100)
 
     dimensions:
       - name: id
         sql: id
         type: number
         primary_key: true
-
-      - name: class
-        sql: class
-        type: number
-
-      - name: costestimate
-        sql: costestimate
-        type: number
-
-      - name: department
-        sql: department
-        type: number
-
-      - name: item
-        sql: item
-        type: number
-
-      - name: linesequencenumber
-        sql: linesequencenumber
-        type: number
-
-      - name: location
-        sql: location
-        type: number
+        public: false
 
       - name: po_id
         sql: po_id
         type: number
+        title: Purchase Order ID
+        description: Reference to purchase order header
+
+      - name: item
+        sql: item
+        type: number
+        title: Item ID
+        description: NetSuite item ID
 
       - name: quantity
         sql: quantity
         type: number
-
-      - name: quantitybilled
-        sql: quantitybilled
-        type: number
+        title: Quantity Ordered
+        description: Quantity ordered on PO line
 
       - name: quantityshiprecv
         sql: quantityshiprecv
         type: number
+        title: Quantity Received
+        description: Quantity shipped/received
 
-      - name: dropship
-        sql: dropship
-        type: boolean
+      - name: quantitybilled
+        sql: quantitybilled
+        type: number
+        title: Quantity Billed
+        description: Quantity billed
 
-      - name: isclosed
-        sql: isclosed
-        type: boolean
-
-      - name: iscogs
-        sql: iscogs
-        type: boolean
-
-      - name: isfullyshipped
-        sql: isfullyshipped
-        type: boolean
-
-      - name: line_total
-        sql: line_total
-        type: string
-
-      - name: links
-        sql: links
-        type: string
-
-      - name: mainline
-        sql: mainline
-        type: boolean
-
-      - name: netamount
-        sql: netamount
-        type: string
-
-      - name: po_status
-        sql: po_status
-        type: string
-
-      - name: taxline
-        sql: taxline
-        type: boolean
-
-      - name: trandate
-        sql: trandate
-        type: string
-
-      - name: tranid
-        sql: tranid
-        type: string
-
-      - name: transactiondiscount
-        sql: transactiondiscount
-        type: boolean
+      - name: qty_outstanding
+        sql: "quantity - COALESCE(quantityshiprecv, 0)"
+        type: number
+        title: Quantity Outstanding
+        description: Quantity not yet received
 
       - name: unit_cost
         sql: unit_cost
-        type: string
+        type: number
+        format: currency
+        title: Unit Cost
+        description: Cost per unit in base currency
 
-    measures:
-      - name: count
-        type: count
+      - name: trandate
+        sql: "CAST({CUBE}.trandate AS TIMESTAMP)"
+        type: time
+        title: PO Date
+        description: Purchase order transaction date (from header via denormalization)
+
+    joins:
+      - name: purchase_orders
+        relationship: many_to_one
+        sql: "{CUBE}.po_id = {purchase_orders}.id"
+
+      - name: items
+        relationship: many_to_one
+        sql: "{CUBE}.item = {items}.id"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: on_order_summary
+        measures:
+          - total_outstanding_qty
+          - on_order_value
+          - line_count
+          - total_ordered_qty
+          - total_received_qty
+        dimensions:
+          - item
+          - purchase_orders.supplier
+        time_dimension: trandate
+        granularity: day
+        refresh_key:
+          every: 1 hour

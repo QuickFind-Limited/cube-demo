@@ -1,0 +1,212 @@
+cubes:
+  - name: b2c_customers
+    sql: >
+      SELECT
+        t.custbody_customer_email as email,
+        t.billing_country,
+        -- Count only FULFILLED orders (CustInvc + CashSale), exclude SalesOrd pipeline
+        MIN(CASE
+          WHEN t.type IN ('CustInvc', 'CashSale')
+          THEN t.trandate
+        END) as first_order_date,
+        MAX(CASE
+          WHEN t.type IN ('CustInvc', 'CashSale')
+          THEN t.trandate
+        END) as last_order_date,
+        CAST(COUNT(DISTINCT CASE
+          WHEN t.type IN ('CustInvc', 'CashSale')
+          THEN t.id
+        END) AS INT64) as order_count,
+        CAST(SUM(CASE
+          WHEN t.type IN ('CustInvc', 'CashSale')
+          THEN t.foreigntotal
+          ELSE 0
+        END) AS FLOAT64) as lifetime_value,
+        -- Transaction type breakdown (separate measures)
+        CAST(COUNT(DISTINCT CASE WHEN t.type = 'CustInvc' THEN t.id END) AS INT64) as invoice_orders,
+        CAST(COUNT(DISTINCT CASE WHEN t.type = 'CashSale' THEN t.id END) AS INT64) as cash_sale_orders,
+        CAST(COUNT(DISTINCT CASE WHEN t.type = 'SalesOrd' THEN t.id END) AS INT64) as salesord_orders,
+        CAST(SUM(CASE WHEN t.type = 'CustInvc' THEN t.foreigntotal ELSE 0 END) AS FLOAT64) as invoice_revenue,
+        CAST(SUM(CASE WHEN t.type = 'CashSale' THEN t.foreigntotal ELSE 0 END) AS FLOAT64) as cash_sale_revenue,
+        CAST(SUM(CASE WHEN t.type = 'SalesOrd' THEN t.foreigntotal ELSE 0 END) AS FLOAT64) as salesord_revenue
+      FROM gpc.transactions_analysis t
+      WHERE t.custbody_customer_email IS NOT NULL
+        AND t.custbody_customer_email != ''
+      GROUP BY t.custbody_customer_email, t.billing_country
+    title: B2C Customers
+    description: Virtual cube for B2C customer metrics aggregated from SalesOrd
+
+    measures:
+      - name: customer_count
+        type: count
+        description: "Total number of unique customers (CM001) - NOW ACCURATE (fixed grain issue)"
+
+      - name: total_lifetime_value
+        sql: "CAST({CUBE}.lifetime_value AS FLOAT64)"
+        type: sum
+        format: currency
+        description: Total lifetime value across all customers
+
+      - name: average_ltv
+        sql: "{total_lifetime_value} / NULLIF({customer_count}, 0)"
+        type: number
+        format: currency
+        description: "Average customer lifetime value (CM002) - NOW ACCURATE"
+
+      - name: total_orders
+        sql: "CAST({CUBE}.order_count AS FLOAT64)"
+        type: sum
+        description: Total number of orders across all transaction types
+
+      - name: avg_orders_per_customer
+        sql: "{total_orders} / NULLIF({customer_count}, 0)"
+        type: number
+        description: "Average orders per customer (CM003)"
+
+      - name: repeat_customers
+        type: count
+        filters:
+          - sql: "{CUBE}.order_count > 1"
+        description: Number of customers with more than one order
+
+      - name: repeat_rate
+        sql: "{repeat_customers} * 100.0 / NULLIF({customer_count}, 0)"
+        type: number
+        format: percent
+        description: Percentage of repeat customers
+
+      # NEW: Transaction type breakdown measures
+      - name: invoice_orders
+        sql: "CAST({CUBE}.invoice_orders AS FLOAT64)"
+        type: sum
+        description: "Orders via CustInvc transactions"
+
+      - name: cash_sale_orders
+        sql: "CAST({CUBE}.cash_sale_orders AS FLOAT64)"
+        type: sum
+        description: "Orders via CashSale transactions"
+
+      - name: salesord_orders
+        sql: "CAST({CUBE}.salesord_orders AS FLOAT64)"
+        type: sum
+        description: "Orders via SalesOrd transactions"
+
+      - name: invoice_revenue
+        sql: "CAST({CUBE}.invoice_revenue AS FLOAT64)"
+        type: sum
+        format: currency
+        description: "Revenue from CustInvc transactions"
+
+      - name: cash_sale_revenue
+        sql: "CAST({CUBE}.cash_sale_revenue AS FLOAT64)"
+        type: sum
+        format: currency
+        description: "Revenue from CashSale transactions"
+
+      - name: salesord_revenue
+        sql: "CAST({CUBE}.salesord_revenue AS FLOAT64)"
+        type: sum
+        format: currency
+        description: "Revenue from SalesOrd transactions"
+
+    dimensions:
+      - name: email
+        sql: "{CUBE}.email"
+        type: string
+        primary_key: true
+        description: Customer email address
+
+      - name: billing_country
+        sql: "{CUBE}.billing_country"
+        type: string
+        description: Customer billing country
+
+      # REMOVED: transaction_type dimension (was causing 3x customer count inflation)
+      # Now available as separate breakdown measures (invoice_orders, cash_sale_orders, salesord_orders)
+
+      - name: first_order_date
+        sql: "CAST({CUBE}.first_order_date AS TIMESTAMP)"
+        type: time
+        description: Date of first order
+
+      - name: last_order_date
+        sql: "CAST({CUBE}.last_order_date AS TIMESTAMP)"
+        type: time
+        description: Date of most recent order
+
+      - name: order_count
+        sql: "{CUBE}.order_count"
+        type: number
+        description: Number of orders placed
+
+      - name: lifetime_value
+        sql: "{CUBE}.lifetime_value"
+        type: number
+        description: Total lifetime value
+
+      - name: customer_tier
+        sql: >
+          CASE
+            WHEN {CUBE}.lifetime_value >= 500 THEN 'VIP'
+            WHEN {CUBE}.lifetime_value >= 200 THEN 'Regular'
+            WHEN {CUBE}.lifetime_value >= 100 THEN 'Occasional'
+            ELSE 'New'
+          END
+        type: string
+        description: Customer tier based on LTV
+
+      - name: recency_bucket
+        sql: >
+          CASE
+            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)) THEN 'Active (30d)'
+            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)) THEN 'Recent (90d)'
+            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY)) THEN 'Lapsed (180d)'
+            ELSE 'Dormant (180d+)'
+          END
+        type: string
+        description: Customer recency bucket
+
+      - name: purchase_frequency_bucket
+        sql: >
+          CASE
+            WHEN {CUBE}.order_count = 1 THEN '1x'
+            WHEN {CUBE}.order_count = 2 THEN '2x'
+            WHEN {CUBE}.order_count = 3 THEN '3x'
+            ELSE '4+'
+          END
+        type: string
+        description: Purchase frequency bucket for CM059
+
+    segments:
+      - name: is_repeat_customer
+        sql: "{CUBE}.order_count > 1"
+
+      - name: vip_customers
+        sql: "{CUBE}.lifetime_value >= 500"
+
+    pre_aggregations:
+      # Customer analysis by tier and country
+      - name: customer_analysis
+        measures:
+          - customer_count
+          - total_lifetime_value
+          - total_orders
+          - repeat_customers
+          - invoice_orders
+          - cash_sale_orders
+          - salesord_orders
+          - invoice_revenue
+          - cash_sale_revenue
+          - salesord_revenue
+          # Removed calculated/non-additive measures:
+          # - average_ltv (calculated - use total_lifetime_value / customer_count instead)
+          # - avg_orders_per_customer (calculated - use total_orders / customer_count instead)
+          # - repeat_rate (calculated - use repeat_customers + customer_count instead)
+        dimensions:
+          - billing_country
+          - customer_tier
+          - recency_bucket
+          - purchase_frequency_bucket
+          # REMOVED: transaction_type (was causing 3x inflation of customer count)
+        refresh_key:
+          every: 24 hour

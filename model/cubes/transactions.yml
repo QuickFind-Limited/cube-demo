@@ -1,0 +1,234 @@
+cubes:
+  - name: transactions
+    sql: >
+      SELECT * FROM gpc.transactions_analysis
+    title: Transactions
+    description: Transaction headers excluding voided/non-posted transactions per NetSuite AUDIT standards (includes orders, invoices, cash sales, and returns)
+
+    joins:
+      - name: currencies
+        relationship: many_to_one
+        sql: "{CUBE}.currency = {currencies.id}"
+
+      - name: subsidiaries
+        relationship: many_to_one
+        sql: "{CUBE}.subsidiary = {subsidiaries.id}"
+
+    measures:
+      - name: order_count
+        type: count
+        description: Total number of transactions
+
+      - name: unique_customers
+        sql: "{CUBE}.custbody_customer_email"
+        type: count_distinct
+        description: Number of unique customers by email
+
+      - name: fulfilled_orders
+        type: count
+        filters:
+          - sql: "{CUBE}.status IN ('B', 'G')"
+        description: Number of fulfilled/billed orders (status B for CustInvc/CashSale, G for SalesOrd)
+
+      - name: cancelled_orders
+        type: count
+        filters:
+          - sql: "{CUBE}.status = 'C'"
+        description: Number of cancelled orders (NOTE - primarily Shopify placeholders pre-March 2025, see documentation)
+
+      - name: customer_credits
+        type: count
+        filters:
+          - sql: "{CUBE}.type = 'CustCred'"
+        description: Number of customer credit transactions (returns, refunds, adjustments)
+
+      - name: revenue_transaction_count
+        type: count
+        filters:
+          - sql: "{CUBE}.type IN ('CustInvc', 'CashSale')"
+        description: Number of revenue transactions (CustInvc + CashSale) - component measure for RET005 calculation
+
+      # Time-aligned component measures (Feb 2025+) for accurate RET005 calculations
+      # Note: return_authorizations measures removed - RtnAuth transaction type not used in D2C workflow
+      - name: customer_credits_aligned
+        type: count
+        filters:
+          - sql: "{CUBE}.type = 'CustCred' AND {CUBE}.trandate >= '2025-02-01'"
+        description: Customer credits from Feb 2025 onwards (time-aligned for RET005 calculation)
+
+      - name: revenue_transaction_count_aligned
+        type: count
+        filters:
+          - sql: "{CUBE}.type IN ('CustInvc', 'CashSale') AND {CUBE}.trandate >= '2025-02-01'"
+        description: Revenue transactions from Feb 2025 onwards (time-aligned denominator for RET004/RET005)
+
+      - name: average_transaction_total
+        sql: "{CUBE}.foreigntotal"
+        type: avg
+        format: currency
+        description: Average transaction total
+
+    dimensions:
+      - name: id
+        sql: "{CUBE}.id"
+        type: number
+        primary_key: true
+
+      - name: type
+        sql: "{CUBE}.type"
+        type: string
+        description: "Transaction type: SalesOrd, CustInvc, CashSale"
+
+      - name: status
+        sql: "{CUBE}.status"
+        type: string
+        description: "Transaction status code: A (Pending Approval), B (Pending Fulfillment), C (Cancelled), G (Billed), Y (Pending)"
+
+      - name: status_name
+        sql: >
+          CASE
+            WHEN {CUBE}.status = 'A' THEN 'Pending Approval'
+            WHEN {CUBE}.status = 'B' THEN 'Pending Fulfillment'
+            WHEN {CUBE}.status = 'C' THEN 'Cancelled'
+            WHEN {CUBE}.status = 'D' THEN 'Partially Fulfilled'
+            WHEN {CUBE}.status = 'E' THEN 'Pending Billing'
+            WHEN {CUBE}.status = 'F' THEN 'Pending Billing'
+            WHEN {CUBE}.status = 'G' THEN 'Billed'
+            WHEN {CUBE}.status = 'H' THEN 'Closed'
+            WHEN {CUBE}.status = 'Y' THEN 'Pending'
+            ELSE {CUBE}.status
+          END
+        type: string
+        description: Human-readable transaction status
+
+      - name: trandate
+        sql: "CAST({CUBE}.trandate AS TIMESTAMP)"
+        type: time
+        description: Transaction date
+
+      - name: month
+        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), MONTH)"
+        type: time
+        description: Transaction month
+
+      - name: quarter
+        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), QUARTER)"
+        type: time
+        description: Transaction quarter
+
+      - name: year
+        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), YEAR)"
+        type: time
+        description: Transaction year
+
+      - name: week
+        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), WEEK)"
+        type: time
+        description: Transaction week
+
+      - name: customer_email
+        sql: "{CUBE}.custbody_customer_email"
+        type: string
+        description: Customer email address
+
+      - name: billing_country
+        sql: "{CUBE}.billing_country"
+        type: string
+        description: Billing country
+
+      - name: shipping_country
+        sql: "{CUBE}.shipping_country"
+        type: string
+        description: Shipping country
+
+      - name: foreign_total
+        sql: "{CUBE}.foreigntotal"
+        type: number
+        description: Transaction total in foreign currency
+
+      - name: currency
+        sql: "{CUBE}.currency"
+        type: number
+        description: Currency ID
+
+      - name: currency_name
+        sql: "{currencies.name}"
+        type: string
+        description: Currency code (EUR, GBP, USD, AUD, etc.)
+
+      - name: subsidiary
+        sql: "{CUBE}.subsidiary"
+        type: number
+        description: Subsidiary ID (2=Ireland/EUR, 6=UK/GBP)
+
+      - name: remote_order_source
+        sql: "{CUBE}.custbody_pwks_remote_order_source"
+        type: string
+        description: Remote order source (e.g., John Lewis)
+
+      - name: shopify_order_name
+        sql: "{CUBE}.custbody_shopify_order_name"
+        type: string
+        description: Shopify order name/number
+
+      - name: is_partner_order
+        sql: "CASE WHEN {CUBE}.custbody_pwks_remote_order_source = 'John Lewis' THEN 'Yes' ELSE 'No' END"
+        type: string
+        description: Whether order is from a partner
+
+      - name: memo
+        sql: "{CUBE}.memo"
+        type: string
+        description: Transaction memo/notes
+
+      # FIXED v58: B2B/Wholesale Customer Segmentation (now based on email presence)
+      - name: customer_type
+        type: string
+        case:
+          when:
+            - sql: "{CUBE}.custbody_customer_email IS NOT NULL AND {CUBE}.custbody_customer_email != ''"
+              label: "Retail/D2C"
+          else:
+            label: "B2B/Wholesale"
+        title: Customer Type
+        description: "Customer segmentation based on email presence: Retail/D2C customers have email addresses (individual consumers, ~66% of transactions), B2B/Wholesale customers do not (POS systems, wholesale accounts, corporate buyers, ~34% of transactions). CRITICAL for pricing analysis - B2B customers receive wholesale bulk pricing (10-30% of retail base price), while Retail/D2C customers pay near full price (70-100% of base price). ALWAYS segment by customer_type when analyzing pricing, discounts, or margins to avoid mixing two completely different business models. Note: customer_type = WHO bought (consumer vs business), channel_type = WHERE they bought (D2C online, RETAIL stores, B2B_WHOLESALE locations)."
+
+    segments:
+      - name: revenue_transactions
+        sql: "{CUBE}.type IN ('CustInvc', 'CashSale')"
+
+      - name: sales_orders
+        sql: "{CUBE}.type = 'SalesOrd'"
+
+      - name: with_customer_email
+        sql: "{CUBE}.custbody_customer_email IS NOT NULL"
+
+      - name: fulfilled_status
+        sql: "{CUBE}.status = 'G'"
+
+    pre_aggregations:
+      # Main rollup for order analysis
+      # V57: Added customer_type for B2B/Wholesale vs Retail/D2C segmentation
+      - name: orders_analysis
+        measures:
+          - order_count
+          - unique_customers
+          - fulfilled_orders
+          - cancelled_orders
+          - customer_credits
+          - revenue_transaction_count
+          - customer_credits_aligned
+          - revenue_transaction_count_aligned
+          - average_transaction_total
+        dimensions:
+          - type
+          - status
+          - status_name
+          - billing_country
+          - shipping_country
+          - currency
+          - customer_type        # B2B/Wholesale vs Retail/D2C (NEW v57)
+        time_dimension: trandate
+        granularity: day
+        refresh_key:
+          every: 24 hour

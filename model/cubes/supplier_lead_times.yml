@@ -1,0 +1,172 @@
+cubes:
+  - name: supplier_lead_times
+    sql: >
+      SELECT
+        irl.id,
+        irl.transaction as receipt_id,
+        irl.createdfrom as po_id,
+        irl.item,
+        irl.quantity,
+        irl.mainline,
+        CAST(ir.trandate AS TIMESTAMP) as receipt_date,
+        ir.tranid as receipt_number,
+        CAST(po.trandate AS TIMESTAMP) as po_date,
+        po.tranid as po_number,
+        po.entity as supplier_id,
+        DATE_DIFF(CAST(ir.trandate AS DATE), CAST(po.trandate AS DATE), DAY) as lead_time_days
+      FROM gpc.item_receipt_lines irl
+      INNER JOIN gpc.item_receipts ir ON CAST(irl.transaction AS INT64) = CAST(ir.id AS INT64)
+      INNER JOIN gpc.purchase_orders po ON CAST(irl.createdfrom AS INT64) = CAST(po.id AS INT64)
+      WHERE irl.createdfrom IS NOT NULL
+        AND irl.mainline = 'F'
+        AND irl.item IS NOT NULL
+        AND DATE_DIFF(CAST(ir.trandate AS DATE), CAST(po.trandate AS DATE), DAY) BETWEEN 0 AND 365
+
+    title: Supplier Lead Times
+    description: PO to receipt lead time analysis using createdfrom linkage. Excludes landed costs and outliers (>365 days).
+
+    measures:
+      # ADDITIVE COMPONENTS (stored in pre-aggregations)
+      - name: receipt_count
+        type: count
+        description: Number of receipts for lead time analysis
+
+      - name: total_qty_received
+        sql: quantity
+        type: sum
+        description: Total quantity received
+
+      - name: sum_lead_time_days
+        sql: lead_time_days
+        type: sum
+        description: Total lead time days (component for calculating averages)
+
+      - name: sum_lead_time_days_squared
+        sql: "lead_time_days * lead_time_days"
+        type: sum
+        description: Sum of squared lead times (component for variance calculation)
+
+      # CALCULATED MEASURES (computed from pre-aggregation components)
+      - name: avg_lead_time_days
+        sql: "CASE WHEN {receipt_count} > 0 THEN CAST({sum_lead_time_days} AS DOUBLE) / {receipt_count} ELSE 0 END"
+        type: number
+        description: Average lead time in days (SLT001 - calculated from sum/count)
+
+      - name: lead_time_variance
+        sql: >
+          CASE
+            WHEN {receipt_count} > 0
+            THEN ({sum_lead_time_days_squared} - ({sum_lead_time_days} * {sum_lead_time_days}) / {receipt_count}) / {receipt_count}
+            ELSE 0
+          END
+        type: number
+        description: Variance in lead time days (SLT002 - measures delivery consistency, lower is better)
+
+      - name: lead_time_std_dev
+        sql: "SQRT(GREATEST({lead_time_variance}, 0))"
+        type: number
+        description: Standard deviation of lead time in days (more intuitive than variance)
+
+      # RAW DATA MEASURES (query raw data, not pre-aggregated)
+      - name: min_lead_time_days
+        sql: lead_time_days
+        type: min
+        description: Minimum lead time in days (queries raw data)
+
+      - name: max_lead_time_days
+        sql: lead_time_days
+        type: max
+        description: Maximum lead time in days (queries raw data)
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+        public: false
+
+      - name: supplier_id
+        sql: supplier_id
+        type: number
+        title: Supplier ID
+        description: Vendor entity ID
+
+      - name: item
+        sql: item
+        type: number
+        title: Item ID
+        description: Item ID for item-level lead time analysis
+
+      - name: lead_time_days
+        sql: lead_time_days
+        type: number
+        title: Lead Time (Days)
+        description: Days from PO to receipt
+
+      - name: receipt_date
+        sql: "CAST({CUBE}.receipt_date AS TIMESTAMP)"
+        type: time
+        title: Receipt Date
+        description: Date of item receipt
+
+      - name: po_date
+        sql: "CAST({CUBE}.po_date AS TIMESTAMP)"
+        type: time
+        title: PO Date
+        description: Purchase order date
+
+      - name: po_number
+        sql: po_number
+        type: string
+        title: PO Number
+        description: Purchase order transaction number
+
+      - name: receipt_number
+        sql: receipt_number
+        type: string
+        title: Receipt Number
+        description: Item receipt transaction number
+
+      # Lead time bucketing for analysis
+      - name: lead_time_bucket
+        type: string
+        title: Lead Time Range
+        description: Bucketed lead time ranges
+        case:
+          when:
+            - sql: "{CUBE}.lead_time_days <= 7"
+              label: "0-7 days"
+            - sql: "{CUBE}.lead_time_days <= 14"
+              label: "8-14 days"
+            - sql: "{CUBE}.lead_time_days <= 30"
+              label: "15-30 days"
+            - sql: "{CUBE}.lead_time_days <= 60"
+              label: "31-60 days"
+            - sql: "{CUBE}.lead_time_days <= 90"
+              label: "61-90 days"
+          else:
+            label: "90+ days"
+
+    # joins:
+    #   - name: items
+    #     relationship: many_to_one
+    #     sql: "{CUBE}.item = {items}.id"
+
+    pre_aggregations:
+      - name: lead_time_rollup
+        measures:
+          - receipt_count
+          - total_qty_received
+          - sum_lead_time_days
+          - sum_lead_time_days_squared
+        dimensions:
+          - item
+          - supplier_id
+        time_dimension: receipt_date
+        granularity: day
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        refresh_key:
+          every: 1 day

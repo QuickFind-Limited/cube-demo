@@ -1,80 +1,71 @@
 cubes:
   - name: item_receipts
-    sql_table: demo.item_receipts
+    sql_table: gpc.item_receipts
 
-    joins: []
+    title: Item Receipts
+    description: Item receipt transaction headers (goods received from suppliers)
+
+    measures:
+      - name: receipt_count
+        type: count
+        description: Number of item receipts
+
+      - name: total_receipt_value
+        sql: total
+        type: sum
+        format: currency
+        description: Total receipt value in base currency
+
+      - name: avg_receipt_value
+        sql: total
+        type: avg
+        format: currency
+        description: Average receipt value
 
     dimensions:
       - name: id
         sql: id
         type: number
         primary_key: true
-
-      - name: currency
-        sql: currency
-        type: number
-
-      - name: entity
-        sql: entity
-        type: number
-
-      - name: postingperiod
-        sql: postingperiod
-        type: number
-
-      - name: subsidiary
-        sql: subsidiary
-        type: number
-
-      - name: createddate
-        sql: createddate
-        type: string
-
-      - name: exchangerate
-        sql: exchangerate
-        type: string
-
-      - name: lastmodifieddate
-        sql: lastmodifieddate
-        type: string
-
-      - name: links
-        sql: links
-        type: string
-
-      - name: memo
-        sql: memo
-        type: string
-
-      - name: posting
-        sql: posting
-        type: boolean
-
-      - name: total
-        sql: total
-        type: string
-
-      - name: trandate
-        sql: trandate
-        type: string
+        public: false
 
       - name: tranid
         sql: tranid
         type: string
+        title: Receipt Number
+        description: Item receipt transaction number
 
-      - name: type
-        sql: type
+      - name: trandate
+        sql: trandate
+        type: time
+        title: Receipt Date
+        description: Date of receipt
+
+      - name: supplier
+        sql: entity
+        type: number
+        title: Supplier ID
+        description: Vendor entity ID
+
+      - name: currency
+        sql: currency
         type: string
+        title: Currency
+        description: Transaction currency code
 
-      - name: voided
-        sql: voided
-        type: boolean
+      - name: exchangerate
+        sql: exchangerate
+        type: number
+        title: Exchange Rate
+        description: Currency exchange rate to base currency
 
-    measures:
-      - name: count
-        type: count
+      - name: memo
+        sql: memo
+        type: string
+        title: Memo
+        description: Receipt memo field
 
-    pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+    joins:
+      - name: item_receipt_lines
+        relationship: one_to_many
+        sql: "{CUBE}.id = {item_receipt_lines}.receipt_id"

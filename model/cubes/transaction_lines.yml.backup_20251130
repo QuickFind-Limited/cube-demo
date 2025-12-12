@@ -16,7 +16,6 @@ cubes:
         i.itemid as sku,
         i.displayname as product_name,
         i.custitem_gpc_category as category,
-        i.custitem_gpc_sections as section,
         i.custitem_gpc_season as season,
         i.custitem_gpc_size as size,
         i.custitem_gpc_range as product_range,
@@ -34,7 +33,11 @@ cubes:
       LEFT JOIN gpc.items i ON tl.item = i.id
       LEFT JOIN gpc.departments d ON tl.department = d.id
       LEFT JOIN gpc.classifications c ON tl.class = c.id
-      WHERE tl.item != 25442
+      WHERE tl.mainline = 'F'
+        AND tl.taxline = 'F'
+        AND tl.iscogs = 'F'
+        AND tl.transactiondiscount = 'F'
+        AND tl.item != 25442
     title: Transaction Lines
     description: Line items from all transactions - the main fact table for metrics (denormalized)
 
@@ -44,16 +47,16 @@ cubes:
         sql: "{CUBE}.transaction = {transactions.id}"
 
       # NEW: Enable sales vs stock analysis (e.g. "high sales, low stock" reorder alerts)
-      # Join to current inventory. Note: Inventory is point-in-time (current stock levels).
       - name: inventory
         relationship: many_to_one
         sql: "{CUBE}.item = {inventory.item}"
+        description: "Join to current inventory. Note: Inventory is point-in-time (current stock levels)."
 
       # NEW P5: Join to locations for centralized channel_type logic
-      # Join to locations cube for centralized channel type classification (P5 fix)
       - name: locations
         relationship: many_to_one
         sql: "{CUBE}.location_name = {locations.name}"
+        description: "Join to locations cube for centralized channel type classification (P5 fix)"
 
     measures:
       # Revenue Measures - Rule 5: CustInvc + CashSale only
@@ -78,9 +81,9 @@ cubes:
 
       # Units Measures - Rule 2: Sales quantities are negative
       - name: units_sold
-        sql: "CAST(CASE WHEN {CUBE}.transaction_type IN ('CustInvc', 'CashSale') AND {CUBE}.quantity < 0 THEN {CUBE}.quantity * -1 ELSE 0 END AS FLOAT64)"
+        sql: "CAST(CASE WHEN {CUBE}.quantity < 0 THEN {CUBE}.quantity * -1 ELSE 0 END AS FLOAT64)"
         type: sum
-        description: Total units sold (uses CASE per Rule 2, CustInvc + CashSale only to match total_revenue filter)
+        description: Total units sold (uses CASE per Rule 2)
 
       - name: units_returned
         sql: "CAST(CASE WHEN {CUBE}.quantity > 0 THEN {CUBE}.quantity ELSE 0 END AS FLOAT64)"
@@ -136,7 +139,7 @@ cubes:
 
       - name: transaction_count_exact
         type: count
-        description: "EXACT transaction count for financial KPIs and AOV calculations. Uses transaction_grain_aov pre-agg with transaction dimension. Only works with dimensions: channel_type, category, billing_country, transaction_date. For other dimensions, use transaction_count (approx)."
+        description: "EXACT transaction count for financial KPIs and AOV calculations. Uses transaction_grain_aov pre-agg. Only works with dimensions: channel_type, category, billing_country, transaction_date. For other dimensions, use transaction_count (approx)."
 
       - name: sku_count
         sql: "{CUBE}.item"
@@ -168,13 +171,7 @@ cubes:
         type: count_distinct_approx
         filters:
           - sql: "{CUBE}.transaction_type = 'SalesOrd'"
-        description: "Count of unique SalesOrd transactions (approximate - 10-20% error possible due to HyperLogLog rollup). For exact counts, use salesord_count_exact with limited dimensions."
-
-      - name: salesord_count_exact
-        type: count
-        filters:
-          - sql: "{CUBE}.transaction_type = 'SalesOrd'"
-        description: "EXACT SalesOrd transaction count for financial KPIs and OM003 calculations. Uses transaction_grain_aov pre-agg. Only works with dimensions: channel_type, category, section, billing_country, transaction_date. For other dimensions, use salesord_count (approx)."
+        description: Count of unique SalesOrd transactions (component for OM003)
 
       - name: average_salesord_value
         sql: "1.0 * SUM(CASE WHEN {CUBE}.transaction_type = 'SalesOrd' THEN {CUBE}.amount * -1 ELSE 0 END) / NULLIF(COUNT(DISTINCT CASE WHEN {CUBE}.transaction_type = 'SalesOrd' THEN {CUBE}.transaction END), 0)"
@@ -195,15 +192,15 @@ cubes:
 
       # Margin Measures for MM001
       - name: total_cost
-        sql: "CAST(CASE WHEN {CUBE}.transaction_type IN ('CustInvc', 'CashSale') THEN {CUBE}.costestimate * {CUBE}.quantity ELSE 0 END AS FLOAT64)"
+        sql: "CAST(CASE WHEN {CUBE}.transaction_type IN ('CustInvc', 'CashSale') THEN {CUBE}.costestimate * -1 ELSE 0 END AS FLOAT64)"
         type: sum
         format: currency
-        description: Total cost estimate (costestimate × quantity, both negative for sales = positive total cost)
+        description: Total cost estimate
 
       - name: gross_margin
         sql: >
           CAST(CASE WHEN {CUBE}.transaction_type IN ('CustInvc', 'CashSale') THEN
-            (({CUBE}.amount * -1) - (COALESCE({CUBE}.costestimate, 0) * {CUBE}.quantity)) * COALESCE({CUBE}.transaction_exchange_rate, 1.0)
+            (({CUBE}.amount * -1) - (COALESCE({CUBE}.costestimate, 0) * -1)) * COALESCE({CUBE}.transaction_exchange_rate, 1.0)
           ELSE 0 END AS FLOAT64)
         type: sum
         format: currency
@@ -213,48 +210,6 @@ cubes:
         sql: "100.0 * (({total_revenue}) - ({total_cost})) / NULLIF({total_revenue}, 0)"
         type: number
         description: Gross margin percentage
-
-      # Alias for business-friendly naming
-      - name: gross_profit
-        sql: "{gross_margin}"
-        type: number
-        format: currency
-        description: "Gross Profit (alias for gross_margin) - Revenue minus COGS. Same as gross_margin measure, provided for clarity in AI queries."
-
-      # GMROI Component Measure
-      # Note: Full GMROI calculation requires joining with inventory.inventory_value_at_cost
-      # GMROI = gross_margin (YTD) / average inventory_value_at_cost
-      # This should be calculated client-side by querying both measures separately
-      - name: gmroi_numerator
-        sql: "{gross_margin}"
-        type: number
-        format: currency
-        description: "GMROI numerator component - use gross_margin for specified time period (e.g., YTD). Divide by inventory.inventory_value_at_cost to get GMROI ratio."
-
-      # NEW: Item Receipt / Landed Cost Measures (4 measures added 2025-11-30)
-      - name: total_landed_costs
-        sql: "CAST(CASE WHEN {CUBE}.transaction_type = 'ItemRcpt' AND {CUBE}.blandedcost = 'T' THEN {CUBE}.amount ELSE 0 END AS FLOAT64)"
-        type: sum
-        format: currency
-        description: "Total landed costs (freight + duties) from Item Receipts. Uses blandedcost='T' flag. LAND001 metric."
-
-      - name: itemrcpt_line_count
-        type: count
-        filters:
-          - sql: "{CUBE}.transaction_type = 'ItemRcpt'"
-        description: "Count of Item Receipt lines (inventory + landed costs)"
-
-      - name: total_itemrcpt_amount
-        sql: "CAST(CASE WHEN {CUBE}.transaction_type = 'ItemRcpt' THEN {CUBE}.amount ELSE 0 END AS FLOAT64)"
-        type: sum
-        format: currency
-        description: "Total Item Receipt amounts (inventory value + landed costs combined)"
-
-      - name: avg_landed_cost_per_receipt
-        sql: "{total_landed_costs} / NULLIF({itemrcpt_line_count}, 0)"
-        type: number
-        format: currency
-        description: "Average landed cost per Item Receipt line"
 
       - name: min_transaction_date
         sql: "{CUBE}.transaction_date"
@@ -419,11 +374,6 @@ cubes:
         type: string
         description: Product category
 
-      - name: section
-        sql: "{CUBE}.section"
-        type: string
-        description: Product section (e.g., Hoodies, Fleeces, Sweatshirts, Leggings)
-
       - name: season
         sql: "{CUBE}.season"
         type: string
@@ -469,54 +419,6 @@ cubes:
         type: string
         description: "Pricing type: FP (Full Price) when no discount, RP (Reduced Price) when item sold below base price"
 
-      # B2B/Wholesale Customer Segmentation (FIXED v58 - now based on email presence)
-      - name: customer_type
-        sql: "{transactions.customer_type}"
-        type: string
-        title: Customer Type
-        description: "Customer segmentation based on email presence: Retail/D2C customers have email addresses (individual consumers, ~66% of transactions), B2B/Wholesale customers do not (POS systems, wholesale accounts, corporate buyers, ~34% of transactions). CRITICAL for pricing analysis - ALWAYS segment by this dimension when analyzing pricing, discounts, margins, or AOV to avoid mixing two fundamentally different business models. B2B customers pay 10-30% of retail (wholesale bulk pricing), Retail/D2C customers pay 70-100% of retail (normal pricing). Note: customer_type = WHO bought, channel_type = WHERE they bought."
-
-      # NEW: ItemRcpt / Inventory Receipt Fields (8 fields added 2025-11-30)
-      - name: landedcostperline
-        sql: "{CUBE}.landedcostperline"
-        type: string
-        description: "Landed cost line flag from NetSuite (always 'T' for ItemRcpt transactions)"
-
-      - name: blandedcost
-        sql: "{CUBE}.blandedcost"
-        type: string
-        description: "ACTUAL landed cost indicator: 'T' = freight/duty line, 'F' = inventory receipt line. Use for LAND001 metric."
-
-      - name: estgrossprofit
-        sql: "CAST({CUBE}.estgrossprofit AS FLOAT64)"
-        type: number
-        description: "Estimated gross profit from NetSuite (for ItemRcpt lines)"
-
-      - name: estgrossprofitpercent
-        sql: "CAST({CUBE}.estgrossprofitpercent AS FLOAT64)"
-        type: number
-        description: "Estimated gross profit percentage from NetSuite"
-
-      - name: foreignamount
-        sql: "CAST({CUBE}.foreignamount AS FLOAT64)"
-        type: number
-        description: "Amount in foreign currency before conversion (ItemRcpt lines)"
-
-      - name: quantitybilled
-        sql: "CAST({CUBE}.quantitybilled AS INT64)"
-        type: number
-        description: "Quantity billed on this line (ItemRcpt tracking)"
-
-      - name: quantitypacked
-        sql: "CAST({CUBE}.quantitypacked AS INT64)"
-        type: number
-        description: "Quantity packed/fulfilled on this line (ItemRcpt tracking)"
-
-      - name: subsidiary
-        sql: "CAST({CUBE}.subsidiary AS INT64)"
-        type: number
-        description: "Subsidiary ID (denormalized from transaction_lines for ItemRcpt analysis)"
-
     segments:
       - name: sales_lines
         sql: "{CUBE}.quantity < 0"
@@ -555,10 +457,7 @@ cubes:
         dimensions:
           - channel_type
           - category
-          - section
           - season
-          - product_range
-          - collection
           - department_name
           - billing_country
           - shipping_country
@@ -570,10 +469,6 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: channel_category_idx
             columns:
@@ -594,18 +489,12 @@ cubes:
           - sku
           - product_name
           - category
-          - section
           - season
           - size
           - color
-          - product_range
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: sku_idx
             columns:
@@ -632,44 +521,10 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: location_name_idx
             columns:
               - location_name
-        refresh_key:
-          every: 24 hour
-
-      # Geographic + Location + Channel analysis (v61 - NEW)
-      # For queries combining billing_country, channel_type, and location_name
-      # Use case: "Revenue and AOV by day, country, channel, and location"
-      - name: geography_location_channel
-        measures:
-          - total_revenue
-          - units_sold
-          - transaction_count
-          - gross_margin
-        dimensions:
-          - billing_country
-          - shipping_country
-          - location_name
-          - channel_type
-        time_dimension: transaction_date
-        granularity: day
-        partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
-        indexes:
-          - name: country_location_channel_idx
-            columns:
-              - billing_country
-              - location_name
-              - channel_type
         refresh_key:
           every: 24 hour
 
@@ -684,10 +539,6 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         refresh_key:
           every: 24 hour
 
@@ -705,16 +556,11 @@ cubes:
         dimensions:
           - channel_type
           - category
-          - section
           - season
           - pricing_type
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: channel_category_idx
             columns:
@@ -736,10 +582,6 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: country_idx
             columns:
@@ -764,15 +606,10 @@ cubes:
           - product_range
           - collection
           - category
-          - section
           - season
         time_dimension: transaction_date
         granularity: month
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: collection_range_idx
             columns:
@@ -791,14 +628,9 @@ cubes:
           - color
           - billing_country
           - category
-          - section
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         refresh_key:
           every: 24 hour
 
@@ -815,10 +647,6 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         refresh_key:
           every: 24 hour
 
@@ -831,19 +659,13 @@ cubes:
         dimensions:
           - channel_type
           - category
-          - section
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         refresh_key:
           every: 24 hour
 
       # NEW P3: Product geography - for "product X in geography Y" queries
-      # V57: Added customer_type for B2B vs Retail analysis
       - name: product_geography
         measures:
           - total_revenue
@@ -854,17 +676,12 @@ cubes:
           - sku
           - product_name
           - category
-          - section
           - season
           - billing_country
-          - customer_type        # B2B/Wholesale vs Retail/D2C (NEW v57)
+          - billing_city
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: sku_country_idx
             columns:
@@ -874,7 +691,6 @@ cubes:
           every: 24 hour
 
       # NEW P3: Channel product - for D2C vs Retail performance comparisons
-      # V57: Added customer_type for B2B vs Retail analysis
       - name: channel_product
         measures:
           - total_revenue
@@ -884,18 +700,12 @@ cubes:
         dimensions:
           - channel_type
           - category
-          - section
           - season
           - size
           - sku
-          - customer_type        # B2B/Wholesale vs Retail/D2C (NEW v57)
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: channel_sku_idx
             columns:
@@ -905,7 +715,6 @@ cubes:
           every: 24 hour
 
       # NEW P3: Size/color analysis - for fashion retail "size S in color Blue" queries
-      # V57: Added customer_type for B2B vs Retail analysis
       - name: size_color_analysis
         measures:
           - total_revenue
@@ -915,54 +724,16 @@ cubes:
           - size
           - color
           - category
-          - section
           - season
           - channel_type
-          - customer_type        # B2B/Wholesale vs Retail/D2C (NEW v57)
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: size_color_idx
             columns:
               - size
               - color
-              - category
-        refresh_key:
-          every: 24 hour
-
-      # NEW: Size/location analysis - for retail "size curve for location X" queries
-      # V57: Added customer_type for B2B vs Retail analysis
-      - name: size_location_analysis
-        measures:
-          - total_revenue
-          - units_sold
-          - gross_margin
-        dimensions:
-          - size
-          - location_name
-          - classification_name
-          - category
-          - section
-          - season
-          - channel_type
-          - customer_type        # B2B/Wholesale vs Retail/D2C (NEW v57)
-        time_dimension: transaction_date
-        granularity: day
-        partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
-        indexes:
-          - name: size_location_idx
-            columns:
-              - size
-              - location_name
               - category
         refresh_key:
           every: 24 hour
@@ -977,7 +748,6 @@ cubes:
         dimensions:
           - channel_type
           - category
-          - section
           - billing_country
         time_dimension: transaction_date
         granularity: year
@@ -988,28 +758,20 @@ cubes:
       # Storage: 438K rows (2024 data) ~0.08 GB, Cost: $0.002/month
       # Accuracy: 100% exact counts vs 10-30% overcount with HyperLogLog
       # Use for: Financial KPIs, AOV calculations, executive reporting
-      # Limitation: Can only query with these 6 dimensions (channel, category, section, country, customer_type, date)
-      # V57: Added customer_type for B2B/Wholesale vs Retail/D2C segmentation
+      # Limitation: Can only query with these 4 dimensions (channel, category, country, date)
       - name: transaction_grain_aov
         measures:
           - total_revenue
           - line_count
           - units_sold
-          - transaction_count_exact  # ADDED: For exact AOV calculations
         dimensions:
           - transaction          # Primary key - one row per transaction
           - channel_type         # D2C vs Retail
           - category             # Product category
-          - section              # Product section
           - billing_country      # Geography
-          - customer_type        # B2B/Wholesale vs Retail/D2C (NEW v57)
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
-        build_range_end:
-          sql: SELECT '2025-10-31'
         indexes:
           - name: txn_channel_idx
             columns:

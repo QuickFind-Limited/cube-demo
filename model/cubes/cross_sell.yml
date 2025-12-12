@@ -1,0 +1,160 @@
+cubes:
+  - name: cross_sell
+    sql: >
+      SELECT
+        tl1.item as item_a,
+        tl2.item as item_b,
+        i1.itemid as item_a_sku,
+        i2.itemid as item_b_sku,
+        i1.displayname as item_a_name,
+        i2.displayname as item_b_name,
+        i1.custitem_gpc_category as item_a_category,
+        i2.custitem_gpc_category as item_b_category,
+        i1.custitem_gpc_sections as item_a_section,
+        i2.custitem_gpc_sections as item_b_section,
+        t.type as transaction_type,
+        CAST(t.trandate AS TIMESTAMP) as trandate,
+        CAST(COUNT(DISTINCT tl1.transaction) AS INT64) as co_purchase_count
+      FROM gpc.transaction_lines_clean tl1
+      JOIN gpc.transaction_lines_clean tl2 ON tl1.transaction = tl2.transaction AND tl1.item < tl2.item
+      JOIN gpc.transactions_clean t ON tl1.transaction = t.id
+      JOIN gpc.items i1 ON tl1.item = i1.id
+      JOIN gpc.items i2 ON tl2.item = i2.id
+      WHERE tl1.quantity < 0
+        AND tl2.quantity < 0
+      GROUP BY tl1.item, tl2.item, i1.itemid, i2.itemid, i1.displayname, i2.displayname,
+               i1.custitem_gpc_category, i2.custitem_gpc_category,
+               i1.custitem_gpc_sections, i2.custitem_gpc_sections,
+               t.type, CAST(t.trandate AS TIMESTAMP)
+    title: Cross-Sell Analysis
+    description: >
+      Product affinity pairs by transaction date showing items purchased together (BASK002).
+      Data is partitioned by month. To get total historical co-purchases, sum total_co_purchases
+      across all time periods without date filter. For recent trends, filter by date range.
+
+    measures:
+      - name: pair_count
+        type: count
+        description: Number of product pairs
+
+      - name: total_co_purchases
+        sql: "CAST({CUBE}.co_purchase_count AS FLOAT64)"
+        type: sum
+        description: Total co-purchase occurrences
+
+      - name: average_co_purchases
+        sql: "{CUBE}.co_purchase_count"
+        type: avg
+        description: Average co-purchase count per pair
+
+      - name: max_co_purchases
+        sql: "{CUBE}.co_purchase_count"
+        type: max
+        description: Maximum co-purchase count
+
+    dimensions:
+      - name: id
+        sql: "CONCAT(CAST({CUBE}.item_a AS STRING), '-', CAST({CUBE}.item_b AS STRING))"
+        type: string
+        primary_key: true
+
+      - name: item_a
+        sql: "{CUBE}.item_a"
+        type: number
+        description: First item ID
+
+      - name: item_b
+        sql: "{CUBE}.item_b"
+        type: number
+        description: Second item ID
+
+      - name: item_a_sku
+        sql: "{CUBE}.item_a_sku"
+        type: string
+        description: First item SKU
+
+      - name: item_b_sku
+        sql: "{CUBE}.item_b_sku"
+        type: string
+        description: Second item SKU
+
+      - name: item_a_name
+        sql: "{CUBE}.item_a_name"
+        type: string
+        description: First item name
+
+      - name: item_b_name
+        sql: "{CUBE}.item_b_name"
+        type: string
+        description: Second item name
+
+      - name: item_a_category
+        sql: "{CUBE}.item_a_category"
+        type: string
+        description: First item category
+
+      - name: item_b_category
+        sql: "{CUBE}.item_b_category"
+        type: string
+        description: Second item category
+
+      - name: item_a_section
+        sql: "{CUBE}.item_a_section"
+        type: string
+        description: First item section
+
+      - name: item_b_section
+        sql: "{CUBE}.item_b_section"
+        type: string
+        description: Second item section
+
+      - name: transaction_type
+        sql: "{CUBE}.transaction_type"
+        type: string
+        description: "Transaction type: SalesOrd, CustInvc, CashSale. Previously hardcoded to CustInvc/CashSale only. Now parameterized for flexible filtering."
+
+      - name: co_purchase_count
+        sql: "{CUBE}.co_purchase_count"
+        type: number
+        description: Number of times purchased together
+
+      # Parameterized Time Dimension - Default: "Last 12 months"
+      - name: trandate
+        sql: "{CUBE}.trandate"
+        type: time
+        description: "Transaction date - PARAMETERIZED: Use timeDimensions with dateRange (default: 'last 12 months')"
+
+    segments:
+      - name: high_affinity
+        sql: "{CUBE}.co_purchase_count >= 10"
+
+      - name: same_category
+        sql: "{CUBE}.item_a_category = {CUBE}.item_b_category"
+
+      - name: cross_category
+        sql: "{CUBE}.item_a_category != {CUBE}.item_b_category"
+
+    # Pre-aggregation enabled for BASK002
+    # Note: self-join on transaction_lines may cause slow build times
+    pre_aggregations:
+      - name: cross_sell_analysis
+        measures:
+          - pair_count
+          - total_co_purchases
+          - average_co_purchases
+          - max_co_purchases
+        dimensions:
+          - item_a_category
+          - item_b_category
+          - item_a_section
+          - item_b_section
+          - transaction_type  # Added for filter compatibility (SKILL defaults)
+        time_dimension: trandate
+        granularity: month
+        partition_granularity: month
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        refresh_key:
+          every: 24 hour

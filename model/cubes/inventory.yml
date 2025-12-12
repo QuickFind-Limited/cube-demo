@@ -1,0 +1,173 @@
+cubes:
+  - name: inventory
+    sql: SELECT * FROM gpc.inventory_calculated
+    title: Inventory
+    description: Current inventory positions from inventory_calculated table (Rule 6)
+
+    joins:
+      - name: items
+        relationship: many_to_one
+        sql: "{CUBE}.item = {items.id}"
+
+      - name: locations
+        relationship: many_to_one
+        sql: "{CUBE}.location = {locations.id}"
+
+    measures:
+      - name: total_stock
+        sql: "CAST({CUBE}.calculated_quantity_available AS FLOAT64)"
+        type: sum
+        description: Total stock (can be negative for backorders)
+
+      - name: available_stock
+        sql: "CAST({CUBE}.calculated_quantity_available AS FLOAT64)"
+        type: sum
+        filters:
+          - sql: "{CUBE}.calculated_quantity_available > 0"
+        description: Available stock (positive only)
+
+      - name: backorder_units
+        sql: "CAST(ABS({CUBE}.calculated_quantity_available) AS FLOAT64)"
+        type: sum
+        filters:
+          - sql: "{CUBE}.calculated_quantity_available < 0"
+        description: Backorder units (negative stock as positive number)
+
+      - name: position_count
+        type: count
+        description: Total number of inventory positions
+
+      - name: sku_count
+        sql: "{CUBE}.item"
+        type: count_distinct_approx
+        description: Number of unique SKUs in inventory
+
+      - name: location_count
+        sql: "{CUBE}.location"
+        type: count_distinct
+        description: Number of locations with inventory
+
+      - name: zero_stock_positions
+        type: count
+        filters:
+          - sql: "{CUBE}.calculated_quantity_available = 0"
+        description: Number of positions with zero stock
+
+      - name: negative_stock_positions
+        type: count
+        filters:
+          - sql: "{CUBE}.calculated_quantity_available < 0"
+        description: Number of positions with negative stock
+
+      - name: average_stock_per_position
+        sql: "{total_stock} / NULLIF({position_count}, 0)"
+        type: number
+        description: Average stock per position
+
+      # GMROI Component Measures
+      - name: inventory_value_at_cost
+        sql: >
+          CAST({CUBE}.calculated_quantity_available *
+          COALESCE((SELECT MAX(rate) FROM gpc.item_receipt_lines irl
+                    WHERE irl.item = {CUBE}.item), 0) AS FLOAT64)
+        type: sum
+        format: currency
+        description: "Inventory value at latest receipt cost (for GMROI denominator). Uses most recent item receipt line cost per item."
+
+      # Sell-through approximation for STR001/PP058
+      # Note: Requires joining with transaction_lines for units_sold
+      # Formula: Units Sold / (Units Sold + Current Stock)
+      # This is calculated at query time by combining measures from both cubes
+
+    dimensions:
+      - name: id
+        sql: "CONCAT(CAST({CUBE}.item AS STRING), '-', CAST({CUBE}.location AS STRING))"
+        type: string
+        primary_key: true
+
+      - name: item
+        sql: "{CUBE}.item"
+        type: number
+
+      - name: itemid
+        sql: "{CUBE}.itemid"
+        type: string
+        title: SKU
+        description: Item SKU code
+
+      - name: displayname
+        sql: "{CUBE}.displayname"
+        type: string
+        description: Item display name
+
+      - name: location
+        sql: "{CUBE}.location"
+        type: number
+
+      - name: quantity
+        sql: "{CUBE}.calculated_quantity_available"
+        type: number
+        description: Quantity available
+
+      - name: stock_status
+        sql: >
+          CASE
+            WHEN {CUBE}.calculated_quantity_available > 0 THEN 'In Stock'
+            WHEN {CUBE}.calculated_quantity_available = 0 THEN 'Zero Stock'
+            ELSE 'Backorder'
+          END
+        type: string
+        description: Stock status category
+
+    segments:
+      - name: positive_stock
+        sql: "{CUBE}.calculated_quantity_available > 0"
+
+      - name: zero_stock
+        sql: "{CUBE}.calculated_quantity_available = 0"
+
+      - name: backorder
+        sql: "{CUBE}.calculated_quantity_available < 0"
+
+    pre_aggregations:
+      # Inventory analysis by location and item attributes
+      - name: inventory_analysis
+        measures:
+          - total_stock
+          - available_stock
+          - backorder_units
+          - position_count
+          - sku_count
+          - location_count
+          - zero_stock_positions
+          - negative_stock_positions
+          - inventory_value_at_cost
+        dimensions:
+          - location
+          - stock_status
+          - items.category
+          - items.section
+          - items.season
+          - items.size
+          - items.range
+          - items.markdown
+          - locations.name
+          - locations.region         # ← ADDED: Enable filtering by region (IRELAND, UK, EU, GLOBAL)
+          - locations.channel_type   # ← ADDED: Enable filtering by channel (D2C, RETAIL, B2B_WHOLESALE, etc.)
+          - locations.location_type  # ← ADDED: Enable filtering by type (RETAIL, FULFILLMENT, etc.)
+        refresh_key:
+          every: 24 hour
+
+      # Item-level inventory (for SKU lookups)
+      - name: item_inventory
+        measures:
+          - total_stock
+          - available_stock
+          - backorder_units
+          - position_count
+        dimensions:
+          - item
+          - itemid
+          - location
+        refresh_key:
+          every: 24 hour

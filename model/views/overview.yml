@@ -1,0 +1,109 @@
+views:
+  # Overview View - Most common metrics for dashboards
+  - name: sales_overview
+    title: Sales Overview
+    description: Common sales metrics with standard dimensions for dashboards and quick analysis
+
+    cubes:
+      - join_path: transaction_lines
+        includes:
+          # Core revenue metrics
+          - total_revenue
+          - net_revenue
+          - units_sold
+          - units_returned
+          - total_tax
+          # Calculated metrics
+          - average_order_value
+          - average_selling_price
+          - transaction_count
+          - sku_count
+
+      - join_path: transaction_lines.transactions
+        includes:
+          # Time dimensions
+          - trandate
+          - year
+          - quarter
+          - month
+          # Transaction attributes
+          - type
+          - status
+
+      - join_path: transaction_lines.locations
+        includes:
+          - name
+          - channel_type
+          - region
+
+      - join_path: transaction_lines.items
+        includes:
+          - itemid
+          - displayname
+          - itemtype
+          - category
+          - season
+          - size
+          - range
+
+  # Inventory Snapshot View - Current stock positions
+  - name: inventory_snapshot
+    title: Inventory Snapshot
+    description: Current inventory levels with product and location details
+
+    cubes:
+      - join_path: inventory
+        includes:
+          # Stock measures
+          - total_stock
+          - available_stock
+          - backorder_units
+          - position_count
+          - sku_count
+          - location_count
+          - zero_stock_positions
+          - negative_stock_positions
+          # Dimensions
+          - stock_status
+
+      - join_path: inventory.locations
+        includes:
+          - name
+          - channel_type
+          - region
+          - location_type
+
+      - join_path: inventory.items
+        includes:
+          - name: itemid
+            alias: sku
+          - name: displayname
+            alias: product_name
+          - itemtype
+          - category
+          - season
+
+  # Customer Insights View - B2C customer analysis
+  - name: customer_insights
+    title: Customer Insights
+    description: B2C customer metrics for retention and LTV analysis
+
+    cubes:
+      - join_path: b2c_customers
+        includes:
+          # Measures
+          - customer_count
+          - total_lifetime_value
+          - average_ltv
+          - total_orders
+          - repeat_customers
+          - repeat_rate
+          # Dimensions
+          - email
+          - billing_country
+          - first_order_date
+          - last_order_date
+          - order_count
+          - lifetime_value
+          - customer_tier
+          - recency_bucket

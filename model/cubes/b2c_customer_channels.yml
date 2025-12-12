@@ -1,0 +1,256 @@
+cubes:
+  - name: b2c_customer_channels
+    sql: >
+      SELECT
+        t.custbody_customer_email as email,
+        t.billing_country,
+        -- Channel type logic (inline from locations cube)
+        CASE
+          WHEN l.name IS NULL THEN 'D2C'
+          WHEN l.name LIKE 'Bleckmann%' AND l.name NOT LIKE '%Quarantine%' AND l.name NOT LIKE '%Miscellaneous%' THEN 'D2C'
+          WHEN l.name IN ('Meteor Space', '2Flow') THEN 'D2C'
+          WHEN l.name IN (
+            'Dundrum Town Centre', 'Mahon Point', 'Crescent Centre', 'Liffey Valley',
+            'Kildare Village', 'Blanchardstown Centre', 'Galway', 'Swords Pavillon', 'Jervis Centre',
+            'Westfield London', 'Manchester', 'Belfast', 'Liverpool'
+          ) THEN 'RETAIL'
+          WHEN l.name LIKE 'Wholesale%' THEN 'B2B_WHOLESALE'
+          WHEN l.name LIKE 'Lifestyle Sports%' AND l.name NOT LIKE '%Quarantine%' THEN 'B2B_WHOLESALE'
+          WHEN l.name IN ('Otrium', 'The Very Group', 'Digme', 'Academy Crests') THEN 'PARTNER'
+          WHEN l.name LIKE 'Events%' THEN 'EVENTS'
+          ELSE 'OTHER'
+        END as channel_type,
+        -- Aggregate by customer + country + channel
+        MIN(CASE
+          WHEN t.type IN ('CustInvc', 'CashSale', 'SalesOrd')
+          THEN t.trandate
+        END) as first_order_date,
+        MAX(CASE
+          WHEN t.type IN ('CustInvc', 'CashSale', 'SalesOrd')
+          THEN t.trandate
+        END) as last_order_date,
+        CAST(COUNT(DISTINCT CASE
+          WHEN t.type IN ('CustInvc', 'CashSale', 'SalesOrd')
+          THEN t.id
+        END) AS INT64) as order_count,
+        CAST(SUM(CASE
+          WHEN t.type IN ('CustInvc', 'CashSale', 'SalesOrd')
+          THEN tl.amount
+          ELSE 0
+        END) AS FLOAT64) as channel_lifetime_value,
+        -- Transaction type breakdown (separate measures)
+        CAST(COUNT(DISTINCT CASE WHEN t.type = 'CustInvc' THEN t.id END) AS INT64) as invoice_orders,
+        CAST(COUNT(DISTINCT CASE WHEN t.type = 'CashSale' THEN t.id END) AS INT64) as cash_sale_orders,
+        CAST(COUNT(DISTINCT CASE WHEN t.type = 'SalesOrd' THEN t.id END) AS INT64) as salesord_orders,
+        CAST(SUM(CASE WHEN t.type = 'CustInvc' THEN tl.amount ELSE 0 END) AS FLOAT64) as invoice_revenue,
+        CAST(SUM(CASE WHEN t.type = 'CashSale' THEN tl.amount ELSE 0 END) AS FLOAT64) as cash_sale_revenue,
+        CAST(SUM(CASE WHEN t.type = 'SalesOrd' THEN tl.amount ELSE 0 END) AS FLOAT64) as salesord_revenue
+      FROM gpc.transaction_lines tl
+      JOIN gpc.transactions_analysis t ON tl.transaction = t.id
+      LEFT JOIN gpc.locations l ON tl.location = l.id
+      WHERE t.custbody_customer_email IS NOT NULL
+        AND t.custbody_customer_email != ''
+      GROUP BY
+        t.custbody_customer_email,
+        t.billing_country,
+        channel_type
+    title: B2C Customer Channel Analytics
+    description: Customer metrics broken down by channel - tracks customer behavior per channel (email + country + channel grain)
+
+    joins:
+      - name: locations
+        relationship: many_to_one
+        sql: "{CUBE}.channel_type = {locations.channel_type}"
+
+    measures:
+      - name: customer_count
+        type: count
+        description: "Total number of unique customer-channel combinations"
+
+      - name: unique_customers
+        sql: email
+        type: count_distinct
+        description: "Distinct customers across all channels"
+
+      - name: total_channel_ltv
+        sql: "CAST({CUBE}.channel_lifetime_value AS FLOAT64)"
+        type: sum
+        format: currency
+        description: Total lifetime value across all customer-channel combinations
+
+      - name: average_channel_ltv
+        sql: "{total_channel_ltv} / NULLIF({customer_count}, 0)"
+        type: number
+        format: currency
+        description: "Average LTV per customer-channel combination"
+
+      - name: total_orders
+        sql: "CAST({CUBE}.order_count AS FLOAT64)"
+        type: sum
+        description: Total number of orders across all channels
+
+      - name: avg_orders_per_customer_channel
+        sql: "{total_orders} / NULLIF({customer_count}, 0)"
+        type: number
+        description: "Average orders per customer-channel combo"
+
+      - name: repeat_customers
+        type: count
+        filters:
+          - sql: "{CUBE}.order_count > 1"
+        description: Number of customer-channel combos with more than one order
+
+      - name: repeat_rate
+        sql: "{repeat_customers} * 100.0 / NULLIF({customer_count}, 0)"
+        type: number
+        format: percent
+        description: Percentage of repeat customers within each channel
+
+      # Transaction type breakdown measures
+      - name: invoice_orders
+        sql: "CAST({CUBE}.invoice_orders AS FLOAT64)"
+        type: sum
+        description: "Orders via CustInvc transactions"
+
+      - name: cash_sale_orders
+        sql: "CAST({CUBE}.cash_sale_orders AS FLOAT64)"
+        type: sum
+        description: "Orders via CashSale transactions"
+
+      - name: salesord_orders
+        sql: "CAST({CUBE}.salesord_orders AS FLOAT64)"
+        type: sum
+        description: "Orders via SalesOrd transactions"
+
+      - name: invoice_revenue
+        sql: "CAST({CUBE}.invoice_revenue AS FLOAT64)"
+        type: sum
+        format: currency
+        description: "Revenue from CustInvc transactions"
+
+      - name: cash_sale_revenue
+        sql: "CAST({CUBE}.cash_sale_revenue AS FLOAT64)"
+        type: sum
+        format: currency
+        description: "Revenue from CashSale transactions"
+
+      - name: salesord_revenue
+        sql: "CAST({CUBE}.salesord_revenue AS FLOAT64)"
+        type: sum
+        format: currency
+        description: "Revenue from SalesOrd transactions"
+
+    dimensions:
+      - name: customer_channel_id
+        sql: "CONCAT({CUBE}.email, '|', COALESCE({CUBE}.billing_country, 'UNKNOWN'), '|', COALESCE({CUBE}.channel_type, 'UNKNOWN'))"
+        type: string
+        primary_key: true
+        description: Composite primary key for email + country + channel
+
+      - name: email
+        sql: "{CUBE}.email"
+        type: string
+        description: Customer email address
+
+      - name: billing_country
+        sql: "{CUBE}.billing_country"
+        type: string
+        description: Customer billing country
+
+      - name: channel_type
+        sql: "{CUBE}.channel_type"
+        type: string
+        description: "Channel type: D2C, RETAIL, B2B_WHOLESALE, EVENTS, OTHER"
+
+      - name: first_order_date
+        sql: "CAST({CUBE}.first_order_date AS TIMESTAMP)"
+        type: time
+        description: Date of first order in this channel
+
+      - name: last_order_date
+        sql: "CAST({CUBE}.last_order_date AS TIMESTAMP)"
+        type: time
+        description: Date of most recent order in this channel
+
+      - name: order_count
+        sql: "{CUBE}.order_count"
+        type: number
+        description: Number of orders placed in this channel
+
+      - name: channel_lifetime_value
+        sql: "{CUBE}.channel_lifetime_value"
+        type: number
+        description: Total lifetime value in this channel
+
+      - name: customer_tier_by_channel
+        sql: >
+          CASE
+            WHEN {CUBE}.channel_lifetime_value >= 500 THEN 'VIP'
+            WHEN {CUBE}.channel_lifetime_value >= 200 THEN 'Regular'
+            WHEN {CUBE}.channel_lifetime_value >= 100 THEN 'Occasional'
+            ELSE 'New'
+          END
+        type: string
+        description: Customer tier based on LTV within this channel
+
+      - name: recency_bucket
+        sql: >
+          CASE
+            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)) THEN 'Active (30d)'
+            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)) THEN 'Recent (90d)'
+            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY)) THEN 'Lapsed (180d)'
+            ELSE 'Dormant (180d+)'
+          END
+        type: string
+        description: Customer recency bucket within this channel
+
+      - name: purchase_frequency_bucket
+        sql: >
+          CASE
+            WHEN {CUBE}.order_count = 1 THEN '1x'
+            WHEN {CUBE}.order_count = 2 THEN '2x'
+            WHEN {CUBE}.order_count = 3 THEN '3x'
+            ELSE '4+'
+          END
+        type: string
+        description: Purchase frequency bucket within this channel
+
+    segments:
+      - name: is_repeat_customer_in_channel
+        sql: "{CUBE}.order_count > 1"
+
+      - name: vip_customers_in_channel
+        sql: "{CUBE}.channel_lifetime_value >= 500"
+
+      - name: d2c_customers
+        sql: "{CUBE}.channel_type = 'D2C'"
+
+      - name: retail_customers
+        sql: "{CUBE}.channel_type = 'RETAIL'"
+
+      - name: b2b_wholesale_customers
+        sql: "{CUBE}.channel_type = 'B2B_WHOLESALE'"
+
+    pre_aggregations:
+      # Customer analysis by channel, tier, and country
+      - name: customer_channel_analysis
+        measures:
+          - customer_count
+          - unique_customers
+          - total_channel_ltv
+          - total_orders
+          - repeat_customers
+          - invoice_orders
+          - cash_sale_orders
+          - salesord_orders
+          - invoice_revenue
+          - cash_sale_revenue
+          - salesord_revenue
+        dimensions:
+          - billing_country
+          - channel_type
+          - customer_tier_by_channel
+          - recency_bucket
+          - purchase_frequency_bucket
+        refresh_key:
+          every: 24 hour

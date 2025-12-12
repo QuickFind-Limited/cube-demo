@@ -1,232 +1,150 @@
 cubes:
   - name: items
-    sql_table: demo.items
+    sql: SELECT * FROM gpc.items
+    title: Items
+    description: Product master data with dimensions like category, season, size, color
 
-    joins: []
+    measures:
+      - name: item_count
+        type: count
+        description: Total number of items
+
+      - name: active_item_count
+        type: count
+        filters:
+          - sql: "{CUBE}.isinactive = FALSE"
+        description: Number of active items
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: number
         primary_key: true
 
-      - name: custitem_gpc_hscode
-        sql: custitem_gpc_hscode
-        type: number
-
-      - name: parent
-        sql: parent
-        type: number
-
-      - name: quantityavailable
-        sql: quantityavailable
-        type: number
-
-      - name: baseprice
-        sql: baseprice
-        type: string
-
-      - name: cost
-        sql: cost
-        type: string
-
-      - name: costingmethod
-        sql: costingmethod
-        type: string
-
-      - name: createddate
-        sql: createddate
-        type: string
-
-      - name: custitem_coo_iso2
-        sql: custitem_coo_iso2
-        type: string
-
-      - name: custitem_gpc_category
-        sql: custitem_gpc_category
-        type: string
-
-      - name: custitem_gpc_child_colour
-        sql: custitem_gpc_child_colour
-        type: string
-
-      - name: custitem_gpc_collection
-        sql: custitem_gpc_collection
-        type: string
-
-      - name: custitem_gpc_eudutyrate
-        sql: custitem_gpc_eudutyrate
-        type: string
-
-      - name: custitem_gpc_fabric
-        sql: custitem_gpc_fabric
-        type: string
-
-      - name: custitem_gpc_parent_colour
-        sql: custitem_gpc_parent_colour
-        type: string
-
-      - name: custitem_gpc_purchaseprice_gbp
-        sql: custitem_gpc_purchaseprice_gbp
-        type: string
-
-      - name: custitem_gpc_range
-        sql: custitem_gpc_range
-        type: string
-
-      - name: custitem_gpc_season
-        sql: custitem_gpc_season
-        type: string
-
-      - name: custitem_gpc_seasontype
-        sql: custitem_gpc_seasontype
-        type: string
-
-      - name: custitem_gpc_sections
-        sql: custitem_gpc_sections
-        type: string
-
-      - name: custitem_gpc_size
-        sql: custitem_gpc_size
-        type: string
-
-      - name: custitem_gpc_stylenumber
-        sql: custitem_gpc_stylenumber
-        type: string
-
-      - name: custitem_gpc_sustainable
-        sql: custitem_gpc_sustainable
-        type: boolean
-
-      - name: custitem_ns_matrix_size
-        sql: custitem_ns_matrix_size
-        type: string
-
-      - name: custitemarticlenumber
-        sql: custitemarticlenumber
-        type: string
-
-      - name: custitemcbm
-        sql: custitemcbm
-        type: string
-
-      - name: custitemcustitem_gpc_age_group
-        sql: custitemcustitem_gpc_age_group
-        type: string
-
-      - name: custitemcustitem_partner_status
-        sql: custitemcustitem_partner_status
-        type: boolean
-
-      - name: custitemcustitemcustitem_manfacturepri
-        sql: custitemcustitemcustitem_manfacturepri
-        type: string
-
-      - name: custitemcustitemcustitem_manufacturepr
-        sql: custitemcustitemcustitem_manufacturepr
-        type: string
-
-      - name: custitemdrawstring
-        sql: custitemdrawstring
-        type: boolean
-
-      - name: custitemknittedwoven
-        sql: custitemknittedwoven
-        type: string
-
-      - name: custitemmarkdown
-        sql: custitemmarkdown
-        type: string
-
-      - name: custitemmidcodeinv
-        sql: custitemmidcodeinv
-        type: string
-
-      - name: custitemmodel_number
-        sql: custitemmodel_number
-        type: string
-
-      - name: custitemrfid_po_number
-        sql: custitemrfid_po_number
-        type: string
-
-      - name: custitemseasoncode
-        sql: custitemseasoncode
-        type: string
-
-      - name: custitemsend_to_marketplace
-        sql: custitemsend_to_marketplace
-        type: boolean
-
-      - name: custitemsynctometeor
-        sql: custitemsynctometeor
-        type: boolean
-
-      - name: custitemsynctovirtualstock
-        sql: custitemsynctovirtualstock
-        type: boolean
-
-      - name: custitemtier
-        sql: custitemtier
-        type: string
-
-      - name: custitemwholesalestyle
-        sql: custitemwholesalestyle
-        type: boolean
-
-      - name: description
-        sql: description
-        type: string
-
-      - name: displayname
-        sql: displayname
-        type: string
-
-      - name: externalid
-        sql: externalid
-        type: string
-
-      - name: isinactive
-        sql: isinactive
-        type: boolean
-
       - name: itemid
-        sql: itemid
+        sql: "{CUBE}.itemid"
         type: string
+        title: SKU
+        description: Item SKU code
 
       - name: itemtype
-        sql: itemtype
+        sql: "{CUBE}.itemtype"
         type: string
+        description: Item type (e.g., InvtPart, Kit, NonInvtPart)
 
-      - name: lastmodifieddate
-        sql: lastmodifieddate
+      - name: displayname
+        sql: "{CUBE}.displayname"
         type: string
+        title: Product Name
+        description: Product display name
 
-      - name: lastpurchaseprice
-        sql: lastpurchaseprice
+      - name: category
+        sql: "{CUBE}.custitem_gpc_category"
         type: string
+        description: Product category
 
-      - name: links
-        sql: links
+      - name: section
+        sql: "{CUBE}.custitem_gpc_sections"
         type: string
+        description: Product section (e.g., Hoodies, Fleeces, Sweatshirts, Leggings)
 
-      - name: matrixtype
-        sql: matrixtype
+      - name: season
+        sql: "{CUBE}.custitem_gpc_season"
         type: string
+        description: Product season (e.g., AW25, SS24)
 
-      - name: subsidiary
-        sql: subsidiary
+      - name: size
+        sql: "{CUBE}.custitem_gpc_size"
         type: string
+        description: Product size
 
-      - name: weight
-        sql: weight
+      - name: range
+        sql: "{CUBE}.custitem_gpc_range"
         type: string
+        description: Product range
 
-    measures:
-      - name: count
-        type: count
+      - name: collection
+        sql: "{CUBE}.custitem_gpc_collection"
+        type: string
+        description: Product collection
+
+      - name: fabric
+        sql: "{CUBE}.custitem_gpc_fabric"
+        type: string
+        description: Product fabric
+
+      - name: color
+        sql: "{CUBE}.custitem_gpc_child_colour"
+        type: string
+        description: Product color (child colour)
+
+      - name: parent_color
+        sql: "{CUBE}.custitem_gpc_parent_colour"
+        type: string
+        description: Product parent color
+
+      - name: style_number
+        sql: "{CUBE}.custitem_gpc_style_number"
+        type: string
+        description: Style number
+
+      - name: season_type
+        sql: "{CUBE}.custitem_gpc_seasontype"
+        type: string
+        description: Season type (Core, Fashion, etc.)
+
+      - name: is_inactive
+        sql: "{CUBE}.isinactive"
+        type: string
+        description: Whether item is inactive
+
+      - name: cost
+        sql: "{CUBE}.cost"
+        type: number
+        description: Item cost
+
+      - name: base_price
+        sql: "{CUBE}.baseprice"
+        type: number
+        description: Base price
+
+      - name: description
+        sql: "{CUBE}.salesdescription"
+        type: string
+        description: Sales description
+
+      - name: has_dimensions
+        sql: "CASE WHEN {CUBE}.custitem_gpc_category IS NOT NULL THEN 'Yes' ELSE 'No' END"
+        type: string
+        description: Whether item has product dimensions
+
+      - name: markdown
+        sql: "{CUBE}.custitemmarkdown"
+        type: string
+        description: Markdown status for inventory analysis
+
+    segments:
+      - name: categorized_products
+        sql: "{CUBE}.custitem_gpc_category IS NOT NULL"
+
+      - name: active_products
+        sql: "{CUBE}.isinactive = FALSE"
+
+      - name: with_season
+        sql: "{CUBE}.custitem_gpc_season IS NOT NULL"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-
+      - name: item_analysis
+        measures:
+          - item_count
+          - active_item_count
+        dimensions:
+          - category
+          - section
+          - season
+          - size
+          - color
+          - itemtype
+          - season_type
+        refresh_key:
+          every: 24 hour

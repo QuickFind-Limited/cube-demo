@@ -1,140 +1,188 @@
 cubes:
   - name: item_receipt_lines
-    sql_table: demo.item_receipt_lines
+    sql: >
+      SELECT
+        irl.*,
+        CAST(ir.trandate AS TIMESTAMP) as receipt_date,
+        i.displayname as item_displayname,
+        i.itemid as item_sku
+      FROM gpc.item_receipt_lines irl
+      LEFT JOIN gpc.item_receipts ir ON CAST(irl.transaction AS INT64) = CAST(ir.id AS INT64)
+      LEFT JOIN gpc.items i ON irl.item = i.id
+      WHERE irl.mainline = 'F'
 
-    joins: []
+    title: Item Receipt Lines
+    description: Item receipt line items with PO linkage for lead time calculation. Excludes landed cost lines.
+
+    measures:
+      - name: receipt_line_count
+        type: count
+        description: Number of receipt line items
+
+      - name: total_received_qty
+        sql: quantity
+        type: sum
+        description: Total quantity received
+
+      - name: total_receipt_line_value
+        sql: amount
+        type: sum
+        format: currency
+        description: Total receipt line value in base currency
+
+      - name: avg_unit_cost
+        sql: rate
+        type: avg
+        format: currency
+        description: Average unit cost on receipts
+
+      - name: lines_with_po_linkage
+        type: count
+        filters:
+          - sql: "{CUBE}.createdfrom IS NOT NULL"
+        description: Receipt lines linked to PO lines (for lead time calculation)
+
+      - name: po_linkage_rate
+        sql: "CASE WHEN COUNT(*) > 0 THEN (COUNT(CASE WHEN createdfrom IS NOT NULL THEN 1 END) * 100.0 / COUNT(*)) ELSE 0 END"
+        type: number
+        format: percent
+        description: Percentage of receipt lines with PO linkage
+
+      # Business-friendly alias for DC intake analysis
+      - name: dc_intake_units
+        sql: quantity
+        type: sum
+        description: "DC Intake Units (alias for total_received_qty) - Physical units received into distribution center. Use this for intake vs sales comparisons."
+
+      - name: dc_intake_value_at_cost
+        sql: amount
+        type: sum
+        format: currency
+        description: "DC Intake Value at cost (alias for total_receipt_line_value) - Total value of goods received at purchase cost."
 
     dimensions:
       - name: id
         sql: id
         type: number
         primary_key: true
+        public: false
 
-      - name: class
-        sql: class
+      - name: receipt_id
+        sql: transaction
         type: number
-
-      - name: createdfrom
-        sql: createdfrom
-        type: number
-
-      - name: estgrossprofitpercent
-        sql: estgrossprofitpercent
-        type: number
-
-      - name: item
-        sql: item
-        type: number
-
-      - name: linesequencenumber
-        sql: linesequencenumber
-        type: number
-
-      - name: location
-        sql: location
-        type: number
-
-      - name: quantity
-        sql: quantity
-        type: number
-
-      - name: quantitybilled
-        sql: quantitybilled
-        type: number
-
-      - name: quantitypacked
-        sql: quantitypacked
-        type: number
-
-      - name: quantityshiprecv
-        sql: quantityshiprecv
-        type: number
-
-      - name: subsidiary
-        sql: subsidiary
-        type: number
+        title: Item Receipt ID
+        description: Reference to item receipt header (transaction field in source table)
 
       - name: transaction
         sql: transaction
         type: number
+        title: Transaction ID
+        description: Transaction field (FK to item_receipts) - used internally for joins
+        public: false
 
-      - name: amount
-        sql: amount
+      - name: receipt_date
+        sql: receipt_date
+        type: time
+        title: Receipt Date
+        description: Date of item receipt (denormalized from item_receipts.trandate)
+
+      - name: item
+        sql: item
+        type: number
+        title: Item ID
+        description: NetSuite item ID
+
+      - name: item_displayname
+        sql: item_displayname
         type: string
+        title: Item Name
+        description: Product display name (denormalized from items table)
 
-      - name: blandedcost
-        sql: blandedcost
-        type: boolean
-
-      - name: costestimatetype
-        sql: costestimatetype
+      - name: item_sku
+        sql: item_sku
         type: string
+        title: SKU
+        description: Item SKU code (denormalized from items table)
 
-      - name: dropship
-        sql: dropship
-        type: boolean
+      - name: quantity
+        sql: quantity
+        type: number
+        title: Quantity Received
+        description: Quantity received on this line
 
-      - name: estgrossprofit
-        sql: estgrossprofit
-        type: string
-
-      - name: foreignamount
-        sql: foreignamount
-        type: string
-
-      - name: isclosed
-        sql: isclosed
-        type: boolean
-
-      - name: iscogs
-        sql: iscogs
-        type: boolean
-
-      - name: isfullyshipped
-        sql: isfullyshipped
-        type: boolean
-
-      - name: landedcostperline
-        sql: landedcostperline
-        type: boolean
-
-      - name: links
-        sql: links
-        type: string
-
-      - name: mainline
-        sql: mainline
-        type: boolean
-
-      - name: netamount
-        sql: netamount
-        type: string
-
-      - name: rate
+      - name: unit_cost
         sql: rate
+        type: number
+        format: currency
+        title: Unit Cost
+        description: Cost per unit in base currency
+
+      - name: createdfrom
+        sql: createdfrom
+        type: number
+        title: Created From PO Line ID
+        description: Links to purchase_order_lines.id for lead time calculation
+
+      - name: memo
+        sql: memo
         type: string
+        title: Memo
+        description: Line memo (used to identify landed costs)
 
-      - name: taxline
-        sql: taxline
-        type: boolean
+    joins:
+      - name: item_receipts
+        relationship: many_to_one
+        sql: "CAST({CUBE}.transaction AS INT64) = CAST({item_receipts}.id AS INT64)"
 
-      - name: trandate
-        sql: trandate
-        type: string
+      - name: items
+        relationship: many_to_one
+        sql: "{CUBE}.item = {items}.id"
 
-      - name: tranid
-        sql: tranid
-        type: string
-
-      - name: transactiondiscount
-        sql: transactiondiscount
-        type: boolean
-
-    measures:
-      - name: count
-        type: count
+      - name: purchase_order_lines
+        relationship: many_to_one
+        sql: "{CUBE}.createdfrom = {purchase_order_lines}.id"
 
     pre_aggregations:
-      # Pre-aggregation definitions go here.
-      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+      # DC intake analysis for GMROI calculations and intake vs sales comparisons
+      # Note: Uses measures-only rollup with denormalized receipt_date dimension.
+      # Item dimensions (category, section, etc.) can be added at query time via items join.
+      - name: dc_intake_analysis
+        measures:
+          - total_received_qty
+          - dc_intake_units
+          - total_receipt_line_value
+          - dc_intake_value_at_cost
+          - receipt_line_count
+          - avg_unit_cost
+        time_dimension: receipt_date
+        granularity: day
+        partition_granularity: month
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        refresh_key:
+          every: 24 hour
 
+      # Item-level receiving analysis for "most common items received" queries
+      # Uses denormalized item names for product-level receiving reports
+      # NOTE: avg_unit_cost removed - type:avg measures don't work in dimensional rollups
+      # Users can calculate avg at query time: total_receipt_line_value / total_received_qty
+      - name: item_receiving_analysis
+        measures:
+          - total_received_qty
+          - total_receipt_line_value
+          - receipt_line_count
+        dimensions:
+          - item
+          - item_displayname
+          - item_sku
+        time_dimension: receipt_date
+        granularity: day
+        partition_granularity: month
+        build_range_start:
+          sql: SELECT '2020-01-01'
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        refresh_key:
+          every: 24 hour
