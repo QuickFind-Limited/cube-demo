@@ -1,0 +1,80 @@
+cubes:
+  - name: item_receipts
+    sql_table: demo.item_receipts
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: currency
+        sql: currency
+        type: number
+
+      - name: entity
+        sql: entity
+        type: number
+
+      - name: postingperiod
+        sql: postingperiod
+        type: number
+
+      - name: subsidiary
+        sql: subsidiary
+        type: number
+
+      - name: createddate
+        sql: createddate
+        type: string
+
+      - name: exchangerate
+        sql: exchangerate
+        type: string
+
+      - name: lastmodifieddate
+        sql: lastmodifieddate
+        type: string
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: memo
+        sql: memo
+        type: string
+
+      - name: posting
+        sql: posting
+        type: boolean
+
+      - name: total
+        sql: total
+        type: string
+
+      - name: trandate
+        sql: trandate
+        type: string
+
+      - name: tranid
+        sql: tranid
+        type: string
+
+      - name: type
+        sql: type
+        type: string
+
+      - name: voided
+        sql: voided
+        type: boolean
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

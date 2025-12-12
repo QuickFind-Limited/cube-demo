@@ -1,0 +1,36 @@
+cubes:
+  - name: currencies
+    sql_table: demo.currencies
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: exchangerate
+        sql: exchangerate
+        type: string
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: name
+        sql: name
+        type: string
+
+      - name: symbol
+        sql: symbol
+        type: string
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

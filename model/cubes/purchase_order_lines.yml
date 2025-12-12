@@ -1,0 +1,116 @@
+cubes:
+  - name: purchase_order_lines
+    sql_table: demo.purchase_order_lines
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: class
+        sql: class
+        type: number
+
+      - name: costestimate
+        sql: costestimate
+        type: number
+
+      - name: department
+        sql: department
+        type: number
+
+      - name: item
+        sql: item
+        type: number
+
+      - name: linesequencenumber
+        sql: linesequencenumber
+        type: number
+
+      - name: location
+        sql: location
+        type: number
+
+      - name: po_id
+        sql: po_id
+        type: number
+
+      - name: quantity
+        sql: quantity
+        type: number
+
+      - name: quantitybilled
+        sql: quantitybilled
+        type: number
+
+      - name: quantityshiprecv
+        sql: quantityshiprecv
+        type: number
+
+      - name: dropship
+        sql: dropship
+        type: boolean
+
+      - name: isclosed
+        sql: isclosed
+        type: boolean
+
+      - name: iscogs
+        sql: iscogs
+        type: boolean
+
+      - name: isfullyshipped
+        sql: isfullyshipped
+        type: boolean
+
+      - name: line_total
+        sql: line_total
+        type: string
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: mainline
+        sql: mainline
+        type: boolean
+
+      - name: netamount
+        sql: netamount
+        type: string
+
+      - name: po_status
+        sql: po_status
+        type: string
+
+      - name: taxline
+        sql: taxline
+        type: boolean
+
+      - name: trandate
+        sql: trandate
+        type: string
+
+      - name: tranid
+        sql: tranid
+        type: string
+
+      - name: transactiondiscount
+        sql: transactiondiscount
+        type: boolean
+
+      - name: unit_cost
+        sql: unit_cost
+        type: string
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

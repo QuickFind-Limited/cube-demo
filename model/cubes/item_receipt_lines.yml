@@ -1,0 +1,140 @@
+cubes:
+  - name: item_receipt_lines
+    sql_table: demo.item_receipt_lines
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: class
+        sql: class
+        type: number
+
+      - name: createdfrom
+        sql: createdfrom
+        type: number
+
+      - name: estgrossprofitpercent
+        sql: estgrossprofitpercent
+        type: number
+
+      - name: item
+        sql: item
+        type: number
+
+      - name: linesequencenumber
+        sql: linesequencenumber
+        type: number
+
+      - name: location
+        sql: location
+        type: number
+
+      - name: quantity
+        sql: quantity
+        type: number
+
+      - name: quantitybilled
+        sql: quantitybilled
+        type: number
+
+      - name: quantitypacked
+        sql: quantitypacked
+        type: number
+
+      - name: quantityshiprecv
+        sql: quantityshiprecv
+        type: number
+
+      - name: subsidiary
+        sql: subsidiary
+        type: number
+
+      - name: transaction
+        sql: transaction
+        type: number
+
+      - name: amount
+        sql: amount
+        type: string
+
+      - name: blandedcost
+        sql: blandedcost
+        type: boolean
+
+      - name: costestimatetype
+        sql: costestimatetype
+        type: string
+
+      - name: dropship
+        sql: dropship
+        type: boolean
+
+      - name: estgrossprofit
+        sql: estgrossprofit
+        type: string
+
+      - name: foreignamount
+        sql: foreignamount
+        type: string
+
+      - name: isclosed
+        sql: isclosed
+        type: boolean
+
+      - name: iscogs
+        sql: iscogs
+        type: boolean
+
+      - name: isfullyshipped
+        sql: isfullyshipped
+        type: boolean
+
+      - name: landedcostperline
+        sql: landedcostperline
+        type: boolean
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: mainline
+        sql: mainline
+        type: boolean
+
+      - name: netamount
+        sql: netamount
+        type: string
+
+      - name: rate
+        sql: rate
+        type: string
+
+      - name: taxline
+        sql: taxline
+        type: boolean
+
+      - name: trandate
+        sql: trandate
+        type: string
+
+      - name: tranid
+        sql: tranid
+        type: string
+
+      - name: transactiondiscount
+        sql: transactiondiscount
+        type: boolean
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

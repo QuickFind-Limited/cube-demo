@@ -1,0 +1,52 @@
+cubes:
+  - name: fulfillment_lines
+    sql_table: demo.fulfillment_lines
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: createdfrom
+        sql: createdfrom
+        type: number
+
+      - name: item
+        sql: item
+        type: number
+
+      - name: location
+        sql: location
+        type: number
+
+      - name: quantity
+        sql: quantity
+        type: number
+
+      - name: quantityshiprecv
+        sql: quantityshiprecv
+        type: number
+
+      - name: transaction
+        sql: transaction
+        type: number
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: shipdate
+        sql: shipdate
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

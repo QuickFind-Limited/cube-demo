@@ -1,0 +1,188 @@
+cubes:
+  - name: transaction
+    sql_table: demo.transaction
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: currency
+        sql: currency
+        type: number
+
+      - name: entity
+        sql: entity
+        type: number
+
+      - name: postingperiod
+        sql: postingperiod
+        type: number
+
+      - name: shipmethod
+        sql: shipmethod
+        type: number
+
+      - name: subsidiary
+        sql: subsidiary
+        type: number
+
+      - name: actualshipdate
+        sql: actualshipdate
+        type: string
+
+      - name: billing_addr1
+        sql: billing_addr1
+        type: string
+
+      - name: billing_city
+        sql: billing_city
+        type: string
+
+      - name: billing_country
+        sql: billing_country
+        type: string
+
+      - name: billing_name
+        sql: billing_name
+        type: string
+
+      - name: billing_phone
+        sql: billing_phone
+        type: string
+
+      - name: billing_state
+        sql: billing_state
+        type: string
+
+      - name: billing_zip
+        sql: billing_zip
+        type: string
+
+      - name: closedate
+        sql: closedate
+        type: string
+
+      - name: createddate
+        sql: createddate
+        type: string
+
+      - name: custbody_customer_email
+        sql: custbody_customer_email
+        type: string
+
+      - name: custbody_pwks_remote_order_id
+        sql: custbody_pwks_remote_order_id
+        type: string
+
+      - name: custbody_pwks_remote_order_source
+        sql: custbody_pwks_remote_order_source
+        type: string
+
+      - name: custbody_shopify_order_name
+        sql: custbody_shopify_order_name
+        type: string
+
+      - name: custbody_shopify_total_amount
+        sql: custbody_shopify_total_amount
+        type: string
+
+      - name: exchangerate
+        sql: exchangerate
+        type: string
+
+      - name: foreigntotal
+        sql: foreigntotal
+        type: string
+
+      - name: lastmodifieddate
+        sql: lastmodifieddate
+        type: string
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: memo
+        sql: memo
+        type: string
+
+      - name: posting
+        sql: posting
+        type: boolean
+
+      - name: shipcarrier
+        sql: shipcarrier
+        type: string
+
+      - name: shipdate
+        sql: shipdate
+        type: string
+
+      - name: shipping_addr1
+        sql: shipping_addr1
+        type: string
+
+      - name: shipping_city
+        sql: shipping_city
+        type: string
+
+      - name: shipping_country
+        sql: shipping_country
+        type: string
+
+      - name: shipping_name
+        sql: shipping_name
+        type: string
+
+      - name: shipping_phone
+        sql: shipping_phone
+        type: string
+
+      - name: shipping_state
+        sql: shipping_state
+        type: string
+
+      - name: shipping_zip
+        sql: shipping_zip
+        type: string
+
+      - name: status
+        sql: status
+        type: string
+
+      - name: taxtotal
+        sql: taxtotal
+        type: string
+
+      - name: total
+        sql: total
+        type: string
+
+      - name: trandate
+        sql: trandate
+        type: string
+
+      - name: tranid
+        sql: tranid
+        type: string
+
+      - name: type
+        sql: type
+        type: string
+
+      - name: voided
+        sql: voided
+        type: boolean
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

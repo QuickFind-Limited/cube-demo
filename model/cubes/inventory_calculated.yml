@@ -1,0 +1,51 @@
+cubes:
+  - name: inventory_calculated
+    sql_table: demo.inventory_calculated
+
+    joins:
+      - name: items
+        sql: "{CUBE.itemid} = {items.itemid}"
+        relationship: many_to_one
+
+    dimensions:
+      - name: itemid
+        sql: itemid
+        type: string
+        primary_key: true
+
+      - name: item
+        sql: item
+        type: number
+
+      - name: location
+        sql: location
+        type: number
+
+      - name: transaction_count
+        sql: transaction_count
+        type: number
+
+      - name: calculated_quantity_available
+        sql: calculated_quantity_available
+        type: string
+
+      - name: displayname
+        sql: displayname
+        type: string
+
+      - name: itemtype
+        sql: itemtype
+        type: string
+
+      - name: last_transaction_date
+        sql: last_transaction_date
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

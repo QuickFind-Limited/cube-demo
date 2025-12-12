@@ -1,0 +1,40 @@
+cubes:
+  - name: subsidiaries
+    sql_table: demo.subsidiaries
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: currency
+        sql: currency
+        type: number
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: legalname
+        sql: legalname
+        type: string
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: name
+        sql: name
+        type: string
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

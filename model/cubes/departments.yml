@@ -1,0 +1,40 @@
+cubes:
+  - name: departments
+    sql_table: demo.departments
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: parent
+        sql: parent
+        type: number
+
+      - name: fullname
+        sql: fullname
+        type: string
+
+      - name: isinactive
+        sql: isinactive
+        type: boolean
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: name
+        sql: name
+        type: string
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

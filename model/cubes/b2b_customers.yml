@@ -1,0 +1,392 @@
+cubes:
+  - name: b2b_customers
+    sql_table: demo.b2b_customers
+
+    joins: []
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: custentity_ca_pid
+        sql: custentity_ca_pid
+        type: number
+
+      - name: custentity_pwks_import_timestamp
+        sql: custentity_pwks_import_timestamp
+        type: number
+
+      - name: daysoverdue
+        sql: "{CUBE}.`daysOverdue`"
+        type: number
+
+      - name: reminderdays
+        sql: "{CUBE}.`reminderDays`"
+        type: number
+
+      - name: addressbook
+        sql: "{CUBE}.`addressBook`"
+        type: string
+
+      - name: aging
+        sql: aging
+        type: string
+
+      - name: aging1
+        sql: aging1
+        type: string
+
+      - name: aging2
+        sql: aging2
+        type: string
+
+      - name: aging3
+        sql: aging3
+        type: string
+
+      - name: aging4
+        sql: aging4
+        type: string
+
+      - name: alcoholrecipienttype
+        sql: "{CUBE}.`alcoholRecipientType`"
+        type: string
+
+      - name: balance
+        sql: balance
+        type: string
+
+      - name: campaigns
+        sql: campaigns
+        type: string
+
+      - name: category
+        sql: category
+        type: string
+
+      - name: comments
+        sql: comments
+        type: string
+
+      - name: companyname
+        sql: "{CUBE}.`companyName`"
+        type: string
+
+      - name: contact
+        sql: contact
+        type: string
+
+      - name: contactlist
+        sql: "{CUBE}.`contactList`"
+        type: string
+
+      - name: contactroles
+        sql: "{CUBE}.`contactRoles`"
+        type: string
+
+      - name: creditholdoverride
+        sql: "{CUBE}.`creditHoldOverride`"
+        type: string
+
+      - name: currency
+        sql: currency
+        type: string
+
+      - name: currencylist
+        sql: "{CUBE}.`currencyList`"
+        type: string
+
+      - name: custentity1
+        sql: custentity1
+        type: string
+
+      - name: custentity_2663_customer_refund
+        sql: custentity_2663_customer_refund
+        type: boolean
+
+      - name: custentity_2663_direct_debit
+        sql: custentity_2663_direct_debit
+        type: boolean
+
+      - name: custentity_2663_email_address_notif
+        sql: custentity_2663_email_address_notif
+        type: string
+
+      - name: custentity_alf_company_reg_num
+        sql: custentity_alf_company_reg_num
+        type: string
+
+      - name: custentity_alf_cust_hide_service_periods
+        sql: custentity_alf_cust_hide_service_periods
+        type: boolean
+
+      - name: custentity_alf_customer_bank_details
+        sql: custentity_alf_customer_bank_details
+        type: string
+
+      - name: custentity_alf_customer_hide_total_vat
+        sql: custentity_alf_customer_hide_total_vat
+        type: boolean
+
+      - name: custentity_alf_customer_store_pdf
+        sql: custentity_alf_customer_store_pdf
+        type: boolean
+
+      - name: custentity_atlas_high_impact
+        sql: custentity_atlas_high_impact
+        type: boolean
+
+      - name: custentity_ca_fba_order
+        sql: custentity_ca_fba_order
+        type: boolean
+
+      - name: custentity_ca_from_ca
+        sql: custentity_ca_from_ca
+        type: boolean
+
+      - name: custentity_ca_sfp_order
+        sql: custentity_ca_sfp_order
+        type: boolean
+
+      - name: custentity_esc_industry
+        sql: custentity_esc_industry
+        type: string
+
+      - name: custentity_gpc_shopifydomain
+        sql: custentity_gpc_shopifydomain
+        type: string
+
+      - name: custentity_kc_cust_group_add
+        sql: custentity_kc_cust_group_add
+        type: string
+
+      - name: custentity_naw_trans_need_approval
+        sql: custentity_naw_trans_need_approval
+        type: boolean
+
+      - name: custentity_tax_reg_no
+        sql: custentity_tax_reg_no
+        type: string
+
+      - name: custentitybuyinggrou
+        sql: custentitybuyinggrou
+        type: string
+
+      - name: custentitycustomertier
+        sql: custentitycustomertier
+        type: string
+
+      - name: custentitypricingtier
+        sql: custentitypricingtier
+        type: string
+
+      - name: custentitysendinvoice
+        sql: custentitysendinvoice
+        type: boolean
+
+      - name: custentitysocemail
+        sql: custentitysocemail
+        type: string
+
+      - name: custentitywholesalemarketsegment
+        sql: custentitywholesalemarketsegment
+        type: string
+
+      - name: customform
+        sql: "{CUBE}.`customForm`"
+        type: string
+
+      - name: defaultaddress
+        sql: "{CUBE}.`defaultAddress`"
+        type: string
+
+      - name: defaultallocationstrategy
+        sql: "{CUBE}.`defaultAllocationStrategy`"
+        type: string
+
+      - name: depositbalance
+        sql: "{CUBE}.`depositBalance`"
+        type: string
+
+      - name: email
+        sql: email
+        type: string
+
+      - name: emailpreference
+        sql: "{CUBE}.`emailPreference`"
+        type: string
+
+      - name: emailtransactions
+        sql: "{CUBE}.`emailTransactions`"
+        type: boolean
+
+      - name: entityid
+        sql: "{CUBE}.`entityId`"
+        type: string
+
+      - name: entitystatus
+        sql: "{CUBE}.`entityStatus`"
+        type: string
+
+      - name: faxtransactions
+        sql: "{CUBE}.`faxTransactions`"
+        type: boolean
+
+      - name: firstname
+        sql: "{CUBE}.`firstName`"
+        type: string
+
+      - name: giveaccess
+        sql: "{CUBE}.`giveAccess`"
+        type: boolean
+
+      - name: globalsubscriptionstatus
+        sql: "{CUBE}.`globalSubscriptionStatus`"
+        type: string
+
+      - name: grouppricing
+        sql: "{CUBE}.`groupPricing`"
+        type: string
+
+      - name: isautogeneratedrepresentingentity
+        sql: "{CUBE}.`isAutogeneratedRepresentingEntity`"
+        type: boolean
+
+      - name: isbudgetapproved
+        sql: "{CUBE}.`isBudgetApproved`"
+        type: boolean
+
+      - name: isinactive
+        sql: "{CUBE}.`isInactive`"
+        type: boolean
+
+      - name: isperson
+        sql: "{CUBE}.`isPerson`"
+        type: boolean
+
+      - name: itempricing
+        sql: "{CUBE}.`itemPricing`"
+        type: string
+
+      - name: language
+        sql: language
+        type: string
+
+      - name: lastname
+        sql: "{CUBE}.`lastName`"
+        type: string
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: overduebalance
+        sql: "{CUBE}.`overdueBalance`"
+        type: string
+
+      - name: phone
+        sql: phone
+        type: string
+
+      - name: pricelevel
+        sql: "{CUBE}.`priceLevel`"
+        type: string
+
+      - name: printtransactions
+        sql: "{CUBE}.`printTransactions`"
+        type: boolean
+
+      - name: receivablesaccount
+        sql: "{CUBE}.`receivablesAccount`"
+        type: string
+
+      - name: representingsubsidiary
+        sql: "{CUBE}.`representingSubsidiary`"
+        type: string
+
+      - name: salesrep
+        sql: "{CUBE}.`salesRep`"
+        type: string
+
+      - name: salesteam
+        sql: "{CUBE}.`salesTeam`"
+        type: string
+
+      - name: sendemail
+        sql: "{CUBE}.`sendEmail`"
+        type: boolean
+
+      - name: shipcomplete
+        sql: "{CUBE}.`shipComplete`"
+        type: boolean
+
+      - name: shippingcarrier
+        sql: "{CUBE}.`shippingCarrier`"
+        type: string
+
+      - name: shippingitem
+        sql: "{CUBE}.`shippingItem`"
+        type: string
+
+      - name: subscriptionmessagehistory
+        sql: "{CUBE}.`subscriptionMessageHistory`"
+        type: string
+
+      - name: subscriptions
+        sql: subscriptions
+        type: string
+
+      - name: subsidiary
+        sql: subsidiary
+        type: string
+
+      - name: syncsalesteams
+        sql: "{CUBE}.`syncSalesTeams`"
+        type: boolean
+
+      - name: terms
+        sql: terms
+        type: string
+
+      - name: title
+        sql: title
+        type: string
+
+      - name: unbilledorders
+        sql: "{CUBE}.`unbilledOrders`"
+        type: string
+
+      - name: unsubscribe
+        sql: unsubscribe
+        type: boolean
+
+      - name: url
+        sql: url
+        type: string
+
+      - name: datecreated
+        sql: "{CUBE}.`dateCreated`"
+        type: time
+
+      - name: custentity_esc_last_modified_date
+        sql: custentity_esc_last_modified_date
+        type: time
+
+      - name: lastmodifieddate
+        sql: "{CUBE}.`lastModifiedDate`"
+        type: time
+
+      - name: startdate
+        sql: "{CUBE}.`startDate`"
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+

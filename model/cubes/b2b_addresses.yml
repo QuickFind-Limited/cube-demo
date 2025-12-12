@@ -1,0 +1,64 @@
+cubes:
+  - name: b2b_addresses
+    sql_table: demo.b2b_addresses
+
+    joins: []
+
+    dimensions:
+      - name: address_id
+        sql: address_id
+        type: number
+        primary_key: true
+
+      - name: recordowner
+        sql: recordowner
+        type: number
+
+      - name: addr1
+        sql: addr1
+        type: string
+
+      - name: addr2
+        sql: addr2
+        type: string
+
+      - name: addressee
+        sql: addressee
+        type: string
+
+      - name: addrphone
+        sql: addrphone
+        type: string
+
+      - name: city
+        sql: city
+        type: string
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: full_address
+        sql: full_address
+        type: string
+
+      - name: links
+        sql: links
+        type: string
+
+      - name: override
+        sql: override
+        type: boolean
+
+      - name: lastmodifieddate
+        sql: lastmodifieddate
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+
