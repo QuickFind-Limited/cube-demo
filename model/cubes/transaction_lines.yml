@@ -602,10 +602,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: channel_category_idx
             columns:
@@ -636,10 +634,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: sku_idx
             columns:
@@ -668,10 +664,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: location_name_idx
             columns:
@@ -698,10 +692,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: country_location_channel_idx
             columns:
@@ -723,10 +715,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         refresh_key:
           every: 365 days
 
@@ -751,10 +741,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: channel_category_idx
             columns:
@@ -777,10 +765,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: country_idx
             columns:
@@ -811,10 +797,8 @@ cubes:
         time_dimension: transaction_date
         granularity: month
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: collection_range_idx
             columns:
@@ -838,10 +822,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         refresh_key:
           every: 365 days
 
@@ -859,10 +841,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         refresh_key:
           every: 365 days
 
@@ -880,10 +860,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         refresh_key:
           every: 365 days
 
@@ -907,10 +885,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: sku_country_idx
             columns:
@@ -939,10 +915,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: channel_sku_idx
             columns:
@@ -971,10 +945,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: size_color_idx
             columns:
@@ -1005,10 +977,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: size_location_idx
             columns:
@@ -1060,10 +1030,8 @@ cubes:
         time_dimension: transaction_date
         granularity: day
         partition_granularity: month
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
-          sql: SELECT '2025-10-31'
+          sql: SELECT CURRENT_DATE()
         indexes:
           - name: txn_channel_idx
             columns:
