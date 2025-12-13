@@ -603,7 +603,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: channel_category_idx
             columns:
@@ -635,7 +635,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: sku_idx
             columns:
@@ -665,7 +665,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: location_name_idx
             columns:
@@ -693,7 +693,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: country_location_channel_idx
             columns:
@@ -716,7 +716,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         refresh_key:
           every: 365 days
 
@@ -742,7 +742,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: channel_category_idx
             columns:
@@ -766,7 +766,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: country_idx
             columns:
@@ -798,7 +798,7 @@ cubes:
         granularity: month
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: collection_range_idx
             columns:
@@ -823,7 +823,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         refresh_key:
           every: 365 days
 
@@ -842,7 +842,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         refresh_key:
           every: 365 days
 
@@ -861,7 +861,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         refresh_key:
           every: 365 days
 
@@ -886,7 +886,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: sku_country_idx
             columns:
@@ -916,7 +916,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: channel_sku_idx
             columns:
@@ -946,7 +946,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: size_color_idx
             columns:
@@ -978,7 +978,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: size_location_idx
             columns:
@@ -1031,7 +1031,7 @@ cubes:
         granularity: day
         partition_granularity: month
         build_range_end:
-          sql: SELECT CURRENT_DATE()
+          sql: SELECT '2025-10-31'
         indexes:
           - name: txn_channel_idx
             columns:
