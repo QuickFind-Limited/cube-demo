@@ -116,8 +116,6 @@ cubes:
           - po_status
         time_dimension: po_date
         granularity: day
-        build_range_start:
-          sql: SELECT '2020-01-01'
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
