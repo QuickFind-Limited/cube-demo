@@ -131,6 +131,7 @@ cubes:
     pre_aggregations:
       # Basket analysis by country and bucket
       # V57: Added customer_type for B2B/Wholesale vs Retail/D2C segmentation
+      # Non-partitioned to avoid partial build issues
       - name: basket_analysis
         scheduled_refresh: false
         measures:
@@ -146,7 +147,6 @@ cubes:
           - customer_type        # B2B/Wholesale vs Retail/D2C (NEW v57)
         time_dimension: trandate
         granularity: month
-        partition_granularity: month
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:

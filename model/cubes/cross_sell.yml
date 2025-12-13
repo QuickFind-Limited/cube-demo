@@ -136,6 +136,7 @@ cubes:
 
     # Pre-aggregation enabled for BASK002
     # Note: self-join on transaction_lines may cause slow build times
+    # Non-partitioned to avoid partial build issues
     pre_aggregations:
       - name: cross_sell_analysis
         scheduled_refresh: false
@@ -152,7 +153,6 @@ cubes:
           - transaction_type  # Added for filter compatibility (SKILL defaults)
         time_dimension: trandate
         granularity: month
-        partition_granularity: month
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
