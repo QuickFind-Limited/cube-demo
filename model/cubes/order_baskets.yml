@@ -132,6 +132,7 @@ cubes:
       # Basket analysis by country and bucket
       # V57: Added customer_type for B2B/Wholesale vs Retail/D2C segmentation
       - name: basket_analysis
+        scheduled_refresh: false
         measures:
           - order_count
           - total_revenue

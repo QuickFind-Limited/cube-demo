@@ -234,6 +234,7 @@ cubes:
     pre_aggregations:
       # Customer analysis by channel, tier, and country
       - name: customer_channel_analysis
+        scheduled_refresh: false
         measures:
           - customer_count
           - unique_customers

@@ -67,6 +67,7 @@ cubes:
 
     pre_aggregations:
       - name: address_analysis
+        scheduled_refresh: false
         measures:
           - address_count
         dimensions:

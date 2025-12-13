@@ -220,6 +220,7 @@ cubes:
 
     pre_aggregations:
       - name: b2b_customer_analysis
+        scheduled_refresh: false
         measures:
           - customer_count
           - active_customer_count

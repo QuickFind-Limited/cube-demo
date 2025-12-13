@@ -187,6 +187,7 @@ cubes:
     pre_aggregations:
       # Customer analysis by tier and country
       - name: customer_analysis
+        scheduled_refresh: false
         measures:
           - customer_count
           - total_lifetime_value

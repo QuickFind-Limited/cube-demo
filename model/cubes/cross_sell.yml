@@ -138,6 +138,7 @@ cubes:
     # Note: self-join on transaction_lines may cause slow build times
     pre_aggregations:
       - name: cross_sell_analysis
+        scheduled_refresh: false
         measures:
           - pair_count
           - total_co_purchases

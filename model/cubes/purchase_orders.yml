@@ -109,6 +109,7 @@ cubes:
 
     pre_aggregations:
       - name: po_summary
+        scheduled_refresh: false
         measures:
           - po_count
           - total_po_value

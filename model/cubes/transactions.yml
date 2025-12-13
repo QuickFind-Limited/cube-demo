@@ -210,6 +210,7 @@ cubes:
       # Main rollup for order analysis
       # V57: Added customer_type for B2B/Wholesale vs Retail/D2C segmentation
       - name: orders_analysis
+        scheduled_refresh: false
         measures:
           - order_count
           - unique_customers

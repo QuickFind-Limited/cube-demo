@@ -530,6 +530,7 @@ cubes:
     pre_aggregations:
       # Wide rollup covering most sales analysis queries
       - name: sales_analysis
+        scheduled_refresh: false
         measures:
           - total_revenue
           - net_revenue
@@ -584,6 +585,7 @@ cubes:
 
       # Product-level analysis
       - name: product_analysis
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -619,6 +621,7 @@ cubes:
 
       # Location-level analysis
       - name: location_analysis
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -647,6 +650,7 @@ cubes:
       # For queries combining billing_country, channel_type, and location_name
       # Use case: "Revenue and AOV by day, country, channel, and location"
       - name: geography_location_channel
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -675,6 +679,7 @@ cubes:
 
       # Daily granularity for recent trends
       - name: daily_metrics
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -693,6 +698,7 @@ cubes:
 
       # Discount analysis
       - name: discount_analysis
+        scheduled_refresh: false
         measures:
           - total_revenue
           - total_discount
@@ -725,6 +731,7 @@ cubes:
 
       # Customer geography analysis
       - name: customer_geography
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -753,6 +760,7 @@ cubes:
 
       # Product range/collection analysis for LIFE004 and other product metrics
       - name: product_range_analysis
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -783,6 +791,7 @@ cubes:
 
       # Size/color by geography
       - name: size_geography
+        scheduled_refresh: false
         measures:
           - units_sold
           - total_revenue
@@ -804,6 +813,7 @@ cubes:
 
       # Transaction type breakdown
       - name: transaction_type_analysis
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -824,6 +834,7 @@ cubes:
 
       # Weekly trends
       - name: weekly_metrics
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -845,6 +856,7 @@ cubes:
       # NEW P3: Product geography - for "product X in geography Y" queries
       # V57: Added customer_type for B2B vs Retail analysis
       - name: product_geography
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -876,6 +888,7 @@ cubes:
       # NEW P3: Channel product - for D2C vs Retail performance comparisons
       # V57: Added customer_type for B2B vs Retail analysis
       - name: channel_product
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -907,6 +920,7 @@ cubes:
       # NEW P3: Size/color analysis - for fashion retail "size S in color Blue" queries
       # V57: Added customer_type for B2B vs Retail analysis
       - name: size_color_analysis
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -938,6 +952,7 @@ cubes:
       # NEW: Size/location analysis - for retail "size curve for location X" queries
       # V57: Added customer_type for B2B vs Retail analysis
       - name: size_location_analysis
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -969,6 +984,7 @@ cubes:
 
       # Yearly metrics for YoY comparisons
       - name: yearly_metrics
+        scheduled_refresh: false
         measures:
           - total_revenue
           - units_sold
@@ -991,6 +1007,7 @@ cubes:
       # Limitation: Can only query with these 6 dimensions (channel, category, section, country, customer_type, date)
       # V57: Added customer_type for B2B/Wholesale vs Retail/D2C segmentation
       - name: transaction_grain_aov
+        scheduled_refresh: false
         measures:
           - total_revenue
           - line_count

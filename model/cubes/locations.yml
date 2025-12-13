@@ -87,6 +87,7 @@ cubes:
 
     pre_aggregations:
       - name: location_analysis
+        scheduled_refresh: false
         measures:
           - location_count
         dimensions:

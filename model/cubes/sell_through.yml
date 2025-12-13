@@ -98,6 +98,7 @@ cubes:
     pre_aggregations:
       # Sell-through by category and season
       - name: sell_through_analysis
+        scheduled_refresh: false
         measures:
           - total_units_sold
           - total_current_stock

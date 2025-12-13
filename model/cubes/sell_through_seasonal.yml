@@ -160,6 +160,7 @@ cubes:
 
     pre_aggregations:
       - name: seasonal_sellthrough
+        scheduled_refresh: false
         measures:
           - units_sold
           - revenue_in_season

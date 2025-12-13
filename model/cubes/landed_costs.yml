@@ -102,6 +102,7 @@ cubes:
     pre_aggregations:
       # Monthly landed costs by item
       - name: monthly_landed_costs
+        scheduled_refresh: false
         measures:
           - total_landed_costs
           - total_foreign_landed_costs

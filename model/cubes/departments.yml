@@ -47,6 +47,7 @@ cubes:
 
     pre_aggregations:
       - name: department_analysis
+        scheduled_refresh: false
         measures:
           - department_count
           - active_department_count
