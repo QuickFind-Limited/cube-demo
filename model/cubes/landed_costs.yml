@@ -113,7 +113,6 @@ cubes:
           - subsidiary_id
         time_dimension: receipt_date
         granularity: month
-        partition_granularity: month
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:

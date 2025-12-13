@@ -157,7 +157,6 @@ cubes:
           - avg_unit_cost
         time_dimension: receipt_date
         granularity: day
-        partition_granularity: month
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
@@ -179,7 +178,6 @@ cubes:
           - item_sku
         time_dimension: receipt_date
         granularity: day
-        partition_granularity: month
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
