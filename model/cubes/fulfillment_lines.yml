@@ -133,7 +133,7 @@ cubes:
             columns:
               - location
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Item-level fulfillment tracking
       - name: item_fulfillment_analysis
@@ -156,7 +156,7 @@ cubes:
             columns:
               - item
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Snapshot pre-agg for location-based queries without time filtering
       - name: location_snapshot
@@ -169,4 +169,4 @@ cubes:
           - location
           - locations.name
         refresh_key:
-          every: 24 hour
+          every: 365 days

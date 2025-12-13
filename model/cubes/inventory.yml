@@ -157,7 +157,7 @@ cubes:
           - locations.channel_type   # ← ADDED: Enable filtering by channel (D2C, RETAIL, B2B_WHOLESALE, etc.)
           - locations.location_type  # ← ADDED: Enable filtering by type (RETAIL, FULFILLMENT, etc.)
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Item-level inventory (for SKU lookups)
       - name: item_inventory
@@ -172,4 +172,4 @@ cubes:
           - itemid
           - location
         refresh_key:
-          every: 24 hour
+          every: 365 days

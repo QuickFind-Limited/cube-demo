@@ -122,4 +122,4 @@ cubes:
           - status
           - supplier
         refresh_key:
-          every: 1 hour
+          every: 365 days

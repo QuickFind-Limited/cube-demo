@@ -74,4 +74,4 @@ cubes:
           - country
           - city
         refresh_key:
-          every: 24 hour
+          every: 365 days

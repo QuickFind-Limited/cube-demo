@@ -110,4 +110,4 @@ cubes:
           - section
           - season
         refresh_key:
-          every: 24 hour
+          every: 365 days

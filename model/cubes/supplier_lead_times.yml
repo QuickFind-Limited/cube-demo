@@ -170,4 +170,4 @@ cubes:
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
-          every: 1 day
+          every: 365 days

@@ -581,7 +581,7 @@ cubes:
               - channel_type
               - category
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Product-level analysis
       - name: product_analysis
@@ -617,7 +617,7 @@ cubes:
               - category
               - season
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Location-level analysis
       - name: location_analysis
@@ -644,7 +644,7 @@ cubes:
             columns:
               - location_name
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Geographic + Location + Channel analysis (v61 - NEW)
       # For queries combining billing_country, channel_type, and location_name
@@ -675,7 +675,7 @@ cubes:
               - location_name
               - channel_type
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Daily granularity for recent trends
       - name: daily_metrics
@@ -694,7 +694,7 @@ cubes:
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Discount analysis
       - name: discount_analysis
@@ -727,7 +727,7 @@ cubes:
               - channel_type
               - category
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Customer geography analysis
       - name: customer_geography
@@ -756,7 +756,7 @@ cubes:
             columns:
               - customer_email
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Product range/collection analysis for LIFE004 and other product metrics
       - name: product_range_analysis
@@ -787,7 +787,7 @@ cubes:
               - collection
               - product_range
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Size/color by geography
       - name: size_geography
@@ -809,7 +809,7 @@ cubes:
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Transaction type breakdown
       - name: transaction_type_analysis
@@ -830,7 +830,7 @@ cubes:
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Weekly trends
       - name: weekly_metrics
@@ -851,7 +851,7 @@ cubes:
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # NEW P3: Product geography - for "product X in geography Y" queries
       # V57: Added customer_type for B2B vs Retail analysis
@@ -883,7 +883,7 @@ cubes:
               - sku
               - billing_country
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # NEW P3: Channel product - for D2C vs Retail performance comparisons
       # V57: Added customer_type for B2B vs Retail analysis
@@ -915,7 +915,7 @@ cubes:
               - channel_type
               - sku
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # NEW P3: Size/color analysis - for fashion retail "size S in color Blue" queries
       # V57: Added customer_type for B2B vs Retail analysis
@@ -947,7 +947,7 @@ cubes:
               - color
               - category
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # NEW: Size/location analysis - for retail "size curve for location X" queries
       # V57: Added customer_type for B2B vs Retail analysis
@@ -980,7 +980,7 @@ cubes:
               - location_name
               - category
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Yearly metrics for YoY comparisons
       - name: yearly_metrics
@@ -998,7 +998,7 @@ cubes:
         time_dimension: transaction_date
         granularity: year
         refresh_key:
-          every: 24 hour
+          every: 365 days
 
       # Transaction-grain pre-agg for EXACT transaction counts (fixes count_distinct_approx accuracy issues)
       # Storage: 438K rows (2024 data) ~0.08 GB, Cost: $0.002/month
@@ -1033,4 +1033,4 @@ cubes:
               - channel_type
               - category
         refresh_key:
-          every: 24 hour
+          every: 365 days

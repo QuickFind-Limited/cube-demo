@@ -148,4 +148,4 @@ cubes:
           - itemtype
           - season_type
         refresh_key:
-          every: 24 hour
+          every: 365 days
