@@ -1,0 +1,80 @@
+cubes:
+  - name: transaction_accounting_lines_cogs
+    sql_table: magical-desktop.demo.transaction_accounting_lines_cogs
+    title: COGS Accounting Lines
+    description: GL-based COGS from TransactionAccountingLine (accurate source of truth for cost of goods sold)
+
+    joins:
+      - name: transaction_lines
+        relationship: many_to_one
+        sql: "{CUBE}.transaction = {transaction_lines.transaction}"
+
+    dimensions:
+      - name: id
+        sql: "CONCAT(CAST({CUBE}.transaction AS STRING), '-', CAST({CUBE}.transactionline AS STRING))"
+        type: string
+        primary_key: true
+        description: Composite primary key (transaction-transactionline)
+
+      - name: account_id
+        sql: account
+        type: number
+        description: Account ID (FK to Account table)
+
+      - name: account_name
+        sql: account_name
+        type: string
+        description: "Account full name (e.g., Cost of Goods Sold - Cost of Goods Solds - Purchases)"
+
+      - name: account_number
+        sql: acctnumber
+        type: string
+        description: Account number (e.g., "6100")
+
+      - name: account_type
+        sql: accttype
+        type: string
+        description: Account type (COGS)
+
+      - name: transaction_date
+        sql: "CAST(trandate AS TIMESTAMP)"
+        type: time
+        description: Transaction date
+
+      - name: transaction_id
+        sql: transaction
+        type: number
+        description: Transaction ID (FK to Transaction table)
+
+      - name: transactionline_id
+        sql: transactionline
+        type: number
+        description: Transaction line ID
+
+      - name: posting_flag
+        sql: posting
+        type: string
+        description: "Posting flag: T (posted) or F (not posted)"
+
+    measures:
+      - name: gl_cogs
+        sql: amount
+        type: sum
+        format: currency
+        description: "GL-based COGS (sum of all COGS account postings) - ACCURATE source of truth, replaces corrupt total_cost field"
+
+      - name: gl_cogs_debit
+        sql: debit
+        type: sum
+        format: currency
+        description: Total COGS debit amounts
+
+      - name: gl_cogs_credit
+        sql: credit
+        type: sum
+        format: currency
+        description: Total COGS credit amounts
+
+      - name: cogs_entry_count
+        type: count
+        description: Number of COGS GL entries
