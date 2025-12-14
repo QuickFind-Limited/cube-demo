@@ -16,7 +16,7 @@ cubes:
       FROM demo.transaction_lines tl
       INNER JOIN demo.transactions t ON tl.transaction = t.id
       WHERE t.type = 'ItemRcpt'
-        AND tl.blandedcost = 'T'
+        AND tl.blandedcost = TRUE
         AND tl.mainline = FALSE
 
     title: Landed Costs Analysis
