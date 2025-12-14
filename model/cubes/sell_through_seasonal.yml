@@ -37,8 +37,8 @@ cubes:
         GROUP BY item
       ) inv ON tl.item = inv.item
       WHERE t.type IN ('CustInvc', 'CashSale')
-        AND COALESCE(t.posting, 'F') = 'T'
-        AND COALESCE(t.voided, 'F') = 'F'
+        AND COALESCE(t.posting, FALSE) = TRUE
+        AND COALESCE(t.voided, FALSE) = FALSE
       GROUP BY
         tl.item,
         i.itemid,
