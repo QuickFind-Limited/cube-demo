@@ -258,10 +258,10 @@ cubes:
 
       # NEW: Item Receipt / Landed Cost Measures (4 measures added 2025-11-30)
       - name: total_landed_costs
-        sql: "CAST(CASE WHEN {CUBE}.transaction_type = 'ItemRcpt' AND {CUBE}.blandedcost = 'T' THEN {CUBE}.amount ELSE 0 END AS FLOAT64)"
+        sql: "CAST(CASE WHEN {CUBE}.transaction_type = 'ItemRcpt' AND {CUBE}.blandedcost = TRUE THEN {CUBE}.amount ELSE 0 END AS FLOAT64)"
         type: sum
         format: currency
-        description: "Total landed costs (freight + duties) from Item Receipts. Uses blandedcost='T' flag. LAND001 metric."
+        description: "Total landed costs (freight + duties) from Item Receipts. Uses blandedcost=TRUE flag. LAND001 metric."
 
       - name: itemrcpt_line_count
         type: count
@@ -504,13 +504,13 @@ cubes:
       # NEW: ItemRcpt / Inventory Receipt Fields (8 fields added 2025-11-30)
       - name: landedcostperline
         sql: "{CUBE}.landedcostperline"
-        type: string
-        description: "Landed cost line flag from NetSuite (always 'T' for ItemRcpt transactions)"
+        type: boolean
+        description: "Landed cost line flag from NetSuite (always TRUE for ItemRcpt transactions)"
 
       - name: blandedcost
         sql: "{CUBE}.blandedcost"
-        type: string
-        description: "ACTUAL landed cost indicator: 'T' = freight/duty line, 'F' = inventory receipt line. Use for LAND001 metric."
+        type: boolean
+        description: "ACTUAL landed cost indicator: TRUE = freight/duty line, FALSE = inventory receipt line. Use for LAND001 metric."
 
       - name: estgrossprofit
         sql: "CAST({CUBE}.estgrossprofit AS FLOAT64)"
