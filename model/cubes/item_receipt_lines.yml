@@ -6,9 +6,9 @@ cubes:
         CAST(ir.trandate AS TIMESTAMP) as receipt_date,
         i.displayname as item_displayname,
         i.itemid as item_sku
-      FROM gpc.item_receipt_lines irl
-      LEFT JOIN gpc.item_receipts ir ON CAST(irl.transaction AS INT64) = CAST(ir.id AS INT64)
-      LEFT JOIN gpc.items i ON irl.item = i.id
+      FROM demo.item_receipt_lines irl
+      LEFT JOIN demo.item_receipts ir ON CAST(irl.transaction AS INT64) = CAST(ir.id AS INT64)
+      LEFT JOIN demo.items i ON irl.item = i.id
       WHERE irl.mainline = 'F'
 
     title: Item Receipt Lines

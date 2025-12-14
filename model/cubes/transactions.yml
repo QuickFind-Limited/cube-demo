@@ -1,7 +1,7 @@
 cubes:
   - name: transactions
     sql: >
-      SELECT * FROM gpc.transactions_analysis
+      SELECT * FROM demo.transactions_analysis
     title: Transactions
     description: Transaction headers excluding voided/non-posted transactions per NetSuite AUDIT standards (includes orders, invoices, cash sales, and returns)
 

@@ -25,14 +25,14 @@ cubes:
         END) as revenue_in_season,
         -- Current inventory (aggregated from inventory_calculated)
         COALESCE(MAX(inv.current_stock), 0) as current_stock
-      FROM gpc.transaction_lines_clean tl
-      LEFT JOIN gpc.transactions_analysis t ON tl.transaction = t.id
-      INNER JOIN gpc.items i ON tl.item = i.id
+      FROM demo.transaction_lines_clean tl
+      LEFT JOIN demo.transactions_analysis t ON tl.transaction = t.id
+      INNER JOIN demo.items i ON tl.item = i.id
       LEFT JOIN (
         SELECT
           item,
           SUM(calculated_quantity_available) as current_stock
-        FROM gpc.inventory_calculated
+        FROM demo.inventory_calculated
         WHERE calculated_quantity_available > 0
         GROUP BY item
       ) inv ON tl.item = inv.item

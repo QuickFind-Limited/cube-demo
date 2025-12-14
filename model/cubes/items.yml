@@ -1,6 +1,6 @@
 cubes:
   - name: items
-    sql: SELECT * FROM gpc.items
+    sql: SELECT * FROM demo.items
     title: Items
     description: Product master data with dimensions like category, season, size, color
 

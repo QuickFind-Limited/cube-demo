@@ -1,6 +1,6 @@
 cubes:
   - name: currencies
-    sql: SELECT * FROM gpc.currencies
+    sql: SELECT * FROM demo.currencies
     title: Currencies
     description: Currency reference data with exchange rates for multi-currency support
 

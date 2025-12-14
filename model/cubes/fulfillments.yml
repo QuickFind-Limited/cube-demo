@@ -1,6 +1,6 @@
 cubes:
   - name: fulfillments
-    sql: SELECT * FROM gpc.fulfillments
+    sql: SELECT * FROM demo.fulfillments
     title: Fulfillments
     description: Item fulfillment records tracking shipments and deliveries
 

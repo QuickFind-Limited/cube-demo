@@ -13,8 +13,8 @@ cubes:
         t.trandate as receipt_date,
         t.tranid as receipt_number,
         t.type as transaction_type
-      FROM gpc.transaction_lines tl
-      INNER JOIN gpc.transactions t ON tl.transaction = t.id
+      FROM demo.transaction_lines tl
+      INNER JOIN demo.transactions t ON tl.transaction = t.id
       WHERE t.type = 'ItemRcpt'
         AND tl.blandedcost = 'T'
         AND tl.mainline = FALSE
