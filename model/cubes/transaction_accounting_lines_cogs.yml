@@ -1,6 +1,6 @@
 cubes:
   - name: transaction_accounting_lines_cogs
-    sql_table: "`magical-desktop.demo.transaction_accounting_lines_cogs`"
+    sql_table: demo.transaction_accounting_lines_cogs
     title: COGS Accounting Lines
     description: GL-based COGS from TransactionAccountingLine (accurate source of truth for cost of goods sold)
 
