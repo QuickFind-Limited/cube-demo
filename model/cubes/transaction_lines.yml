@@ -27,13 +27,13 @@ cubes:
         curr.name as currency_name,
         d.name as department_name,
         c.name as classification_name
-      FROM demo.transaction_lines_clean tl
-      LEFT JOIN demo.transactions_analysis t ON tl.transaction = t.id
-      LEFT JOIN demo.currencies curr ON t.currency = curr.id
-      LEFT JOIN demo.locations l ON tl.location = l.id
-      LEFT JOIN demo.items i ON tl.item = i.id
-      LEFT JOIN demo.departments d ON tl.department = d.id
-      LEFT JOIN demo.classifications c ON tl.class = c.id
+      FROM gpc.transaction_lines_clean tl
+      LEFT JOIN gpc.transactions_analysis t ON tl.transaction = t.id
+      LEFT JOIN gpc.currencies curr ON t.currency = curr.id
+      LEFT JOIN gpc.locations l ON tl.location = l.id
+      LEFT JOIN gpc.items i ON tl.item = i.id
+      LEFT JOIN gpc.departments d ON tl.department = d.id
+      LEFT JOIN gpc.classifications c ON tl.class = c.id
       WHERE tl.item != 25442
     title: Transaction Lines
     description: Line items from all transactions - the main fact table for metrics (denormalized)

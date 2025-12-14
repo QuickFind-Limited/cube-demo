@@ -1,6 +1,6 @@
 cubes:
   - name: subsidiaries
-    sql: SELECT * FROM demo.subsidiaries
+    sql: SELECT * FROM gpc.subsidiaries
     title: Subsidiaries
     description: Legal entity reference data for multi-entity accounting
 

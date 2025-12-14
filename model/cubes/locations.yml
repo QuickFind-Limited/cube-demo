@@ -1,6 +1,6 @@
 cubes:
   - name: locations
-    sql: SELECT * FROM demo.locations
+    sql: SELECT * FROM gpc.locations
     title: Locations
     description: Warehouse and store locations with centralized channel type logic
 

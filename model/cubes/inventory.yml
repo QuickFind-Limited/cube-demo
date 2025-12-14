@@ -1,6 +1,6 @@
 cubes:
   - name: inventory
-    sql: SELECT * FROM demo.inventory_calculated
+    sql: SELECT * FROM gpc.inventory_calculated
     title: Inventory
     description: Current inventory positions from inventory_calculated table (Rule 6)
 
@@ -68,7 +68,7 @@ cubes:
       - name: inventory_value_at_cost
         sql: >
           CAST({CUBE}.calculated_quantity_available *
-          COALESCE((SELECT MAX(rate) FROM demo.item_receipt_lines irl
+          COALESCE((SELECT MAX(rate) FROM gpc.item_receipt_lines irl
                     WHERE irl.item = {CUBE}.item), 0) AS FLOAT64)
         type: sum
         format: currency

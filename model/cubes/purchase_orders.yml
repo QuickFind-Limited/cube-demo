@@ -1,6 +1,6 @@
 cubes:
   - name: purchase_orders
-    sql_table: demo.purchase_orders
+    sql_table: gpc.purchase_orders
 
     title: Purchase Orders
     description: Purchase order transaction headers from suppliers

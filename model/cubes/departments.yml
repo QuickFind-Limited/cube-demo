@@ -1,6 +1,6 @@
 cubes:
   - name: departments
-    sql: SELECT * FROM demo.departments
+    sql: SELECT * FROM gpc.departments
     title: Departments
     description: Department reference data (eCommerce, Retail, Wholesale, etc.)
 

@@ -1,6 +1,6 @@
 cubes:
   - name: b2b_customer_addresses
-    sql: SELECT * FROM demo.b2b_customer_addresses
+    sql: SELECT * FROM gpc.b2b_customer_addresses
     title: B2B Customer Addresses
     description: Junction table linking B2B customers to their address book entries
 

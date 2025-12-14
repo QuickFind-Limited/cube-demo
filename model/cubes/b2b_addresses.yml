@@ -1,6 +1,6 @@
 cubes:
   - name: b2b_addresses
-    sql: SELECT * FROM demo.b2b_addresses
+    sql: SELECT * FROM gpc.b2b_addresses
     title: B2B Addresses
     description: B2B address reference data for shipping and billing
 

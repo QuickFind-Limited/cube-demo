@@ -1,6 +1,6 @@
 cubes:
   - name: item_receipts
-    sql_table: demo.item_receipts
+    sql_table: gpc.item_receipts
 
     title: Item Receipts
     description: Item receipt transaction headers (goods received from suppliers)
