@@ -53,8 +53,8 @@ cubes:
 
       - name: posting_flag
         sql: posting
-        type: string
-        description: "Posting flag: T (posted) or F (not posted)"
+        type: boolean
+        description: "Posting flag: true (posted) or false (not posted)"
 
     measures:
       - name: gl_cogs
