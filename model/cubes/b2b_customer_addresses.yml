@@ -72,28 +72,28 @@ cubes:
 
       - name: defaultbilling
         sql: "{CUBE}.defaultbilling"
-        type: string
-        description: Is default billing address (T/F)
+        type: boolean
+        description: Is default billing address
 
       - name: defaultshipping
         sql: "{CUBE}.defaultshipping"
-        type: string
-        description: Is default shipping address (T/F)
+        type: boolean
+        description: Is default shipping address
 
       - name: isresidential
         sql: "{CUBE}.isresidential"
-        type: string
-        description: Is residential address (F for business)
+        type: boolean
+        description: Is residential address (false for business)
 
     segments:
       - name: default_billing
-        sql: "{CUBE}.defaultbilling = 'T'"
+        sql: "{CUBE}.defaultbilling = TRUE"
 
       - name: default_shipping
-        sql: "{CUBE}.defaultshipping = 'T'"
+        sql: "{CUBE}.defaultshipping = TRUE"
 
       - name: business_addresses
-        sql: "{CUBE}.isresidential = 'F'"
+        sql: "{CUBE}.isresidential = FALSE"
 
     pre_aggregations:
       - name: customer_address_analysis
