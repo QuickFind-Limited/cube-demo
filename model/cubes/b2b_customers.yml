@@ -28,10 +28,10 @@ cubes:
         description: Total overdue balance
 
       - name: average_balance
-        sql: "{CUBE}.balance"
-        type: avg
+        sql: "{total_balance} / NULLIF({customer_count}, 0)"
+        type: number
         format: currency
-        description: Average customer balance
+        description: "Average customer balance (calculated from components, NOT for use in pre-aggregations)"
 
     dimensions:
       - name: id
@@ -226,7 +226,6 @@ cubes:
           - active_customer_count
           - total_balance
           - total_overdue
-          - average_balance
         dimensions:
           - customer_tier
           - wholesale_market_segment

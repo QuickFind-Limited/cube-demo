@@ -45,7 +45,7 @@ cubes:
         description: "Average landed cost per item receipt transaction"
 
       - name: receipt_count
-        type: count_distinct
+        type: count_distinct_approx
         sql: "{CUBE}.transaction"
         description: "Number of unique item receipt transactions with landed costs"
 

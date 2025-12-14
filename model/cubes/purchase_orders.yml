@@ -17,10 +17,10 @@ cubes:
         description: Total PO value in EUR (base currency)
 
       - name: avg_po_value
-        sql: total
-        type: avg
+        sql: "{total_po_value} / NULLIF({po_count}, 0)"
+        type: number
         format: currency
-        description: Average PO value
+        description: Average PO value (calculated from components, NOT for use in pre-aggregations)
 
       - name: pending_receipt_count
         type: count
@@ -113,7 +113,7 @@ cubes:
         measures:
           - po_count
           - total_po_value
-          - avg_po_value
+          # avg_po_value removed - calculate at query time from total_po_value / po_count
           - pending_receipt_count
           - partially_received_count
           - pending_billing_count

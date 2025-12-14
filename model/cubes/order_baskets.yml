@@ -49,10 +49,10 @@ cubes:
         description: Average items per basket
 
       - name: average_order_value
-        sql: "{CUBE}.order_total"
-        type: avg
+        sql: "{total_revenue} / NULLIF({order_count}, 0)"
+        type: number
         format: currency
-        description: Average order value
+        description: "Average order value (calculated from components, NOT for use in pre-aggregations)"
 
       - name: total_line_count
         sql: "CAST({CUBE}.line_count AS FLOAT64)"
@@ -138,7 +138,6 @@ cubes:
           - order_count
           - total_revenue
           - total_units
-          - average_order_value
           - total_line_count
         dimensions:
           - billing_country

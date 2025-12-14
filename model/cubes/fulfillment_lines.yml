@@ -38,13 +38,13 @@ cubes:
 
       - name: sku_count
         sql: "{CUBE}.item"
-        type: count_distinct
-        description: Number of unique SKUs shipped
+        type: count_distinct_approx
+        description: Number of unique SKUs shipped (approximate with HyperLogLog)
 
       - name: location_count
         sql: "{CUBE}.location"
-        type: count_distinct
-        description: Number of shipping locations
+        type: count_distinct_approx
+        description: Number of shipping locations (approximate with HyperLogLog)
 
       - name: total_fulfillment_days
         sql: "CAST(DATE_DIFF(CAST({CUBE}.shipdate AS DATE), CAST({transactions.trandate} AS DATE), DAY) AS FLOAT64)"

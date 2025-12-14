@@ -43,9 +43,9 @@ cubes:
         description: Total co-purchase occurrences
 
       - name: average_co_purchases
-        sql: "{CUBE}.co_purchase_count"
-        type: avg
-        description: Average co-purchase count per pair
+        sql: "{total_co_purchases} / NULLIF({pair_count}, 0)"
+        type: number
+        description: "Average co-purchase count per pair (calculated from components, NOT for use in pre-aggregations)"
 
       - name: max_co_purchases
         sql: "{CUBE}.co_purchase_count"
@@ -143,7 +143,6 @@ cubes:
         measures:
           - pair_count
           - total_co_purchases
-          - average_co_purchases
           - max_co_purchases
         dimensions:
           - item_a_category

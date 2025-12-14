@@ -21,8 +21,8 @@ cubes:
 
       - name: unique_customers
         sql: "{CUBE}.custbody_customer_email"
-        type: count_distinct
-        description: Number of unique customers by email
+        type: count_distinct_approx
+        description: Number of unique customers by email (approximate with HyperLogLog, 10-20% error margin acceptable for analytics)
 
       - name: fulfilled_orders
         type: count
@@ -62,11 +62,17 @@ cubes:
           - sql: "{CUBE}.type IN ('CustInvc', 'CashSale') AND {CUBE}.trandate >= '2025-02-01'"
         description: Revenue transactions from Feb 2025 onwards (time-aligned denominator for RET004/RET005)
 
-      - name: average_transaction_total
+      - name: total_foreign_amount
         sql: "{CUBE}.foreigntotal"
-        type: avg
+        type: sum
         format: currency
-        description: Average transaction total
+        description: Sum of foreign totals for average calculation (component measure for rollup-only mode)
+
+      - name: average_transaction_total
+        sql: "{total_foreign_amount} / NULLIF({order_count}, 0)"
+        type: number
+        format: currency
+        description: Average transaction total (calculated from components, NOT for use in pre-aggregations)
 
     dimensions:
       - name: id
@@ -220,7 +226,7 @@ cubes:
           - revenue_transaction_count
           - customer_credits_aligned
           - revenue_transaction_count_aligned
-          - average_transaction_total
+          - total_foreign_amount          # Component for avg calculation (replaced average_transaction_total)
         dimensions:
           - type
           - status

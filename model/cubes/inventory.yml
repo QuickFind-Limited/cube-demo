@@ -44,7 +44,7 @@ cubes:
 
       - name: location_count
         sql: "{CUBE}.location"
-        type: count_distinct
+        type: count_distinct_approx
         description: Number of locations with inventory
 
       - name: zero_stock_positions

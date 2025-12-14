@@ -31,10 +31,10 @@ cubes:
         description: Total receipt line value in base currency
 
       - name: avg_unit_cost
-        sql: rate
-        type: avg
+        sql: "{total_receipt_line_value} / NULLIF({total_received_qty}, 0)"
+        type: number
         format: currency
-        description: Average unit cost on receipts
+        description: "Average unit cost on receipts (calculated from components, NOT for use in pre-aggregations)"
 
       - name: lines_with_po_linkage
         type: count
@@ -154,7 +154,6 @@ cubes:
           - total_receipt_line_value
           - dc_intake_value_at_cost
           - receipt_line_count
-          - avg_unit_cost
         time_dimension: receipt_date
         granularity: day
         build_range_end:

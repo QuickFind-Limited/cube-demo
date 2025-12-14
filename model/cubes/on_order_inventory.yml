@@ -42,13 +42,13 @@ cubes:
 
       - name: open_po_count
         sql: po_id
-        type: count_distinct
-        description: Total number of open POs
+        type: count_distinct_approx
+        description: Total number of open POs (approximate with HyperLogLog)
 
       - name: item_count
         sql: item
-        type: count_distinct
-        description: Number of unique items with on-order inventory
+        type: count_distinct_approx
+        description: Number of unique items with on-order inventory (approximate with HyperLogLog)
 
       - name: avg_pos_per_item
         sql: po_id

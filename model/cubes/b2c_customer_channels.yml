@@ -69,8 +69,8 @@ cubes:
 
       - name: unique_customers
         sql: email
-        type: count_distinct
-        description: "Distinct customers across all channels"
+        type: count_distinct_approx
+        description: "Distinct customers across all channels (approximate with HyperLogLog)"
 
       - name: total_channel_ltv
         sql: "CAST({CUBE}.channel_lifetime_value AS FLOAT64)"
