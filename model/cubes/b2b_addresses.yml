@@ -57,8 +57,8 @@ cubes:
 
       - name: override
         sql: "{CUBE}.override"
-        type: string
-        description: Override flag (T/F)
+        type: boolean
+        description: Override flag
 
       - name: recordowner
         sql: "{CUBE}.recordowner"
