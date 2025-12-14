@@ -53,13 +53,13 @@ cubes:
       - name: customer_credits_aligned
         type: count
         filters:
-          - sql: "{CUBE}.type = 'CustCred' AND {CUBE}.trandate >= '2025-02-01'"
+          - sql: "{CUBE}.type = 'CustCred' AND PARSE_DATE('%d/%m/%Y', {CUBE}.trandate) >= DATE('2025-02-01')"
         description: Customer credits from Feb 2025 onwards (time-aligned for RET005 calculation)
 
       - name: revenue_transaction_count_aligned
         type: count
         filters:
-          - sql: "{CUBE}.type IN ('CustInvc', 'CashSale') AND {CUBE}.trandate >= '2025-02-01'"
+          - sql: "{CUBE}.type IN ('CustInvc', 'CashSale') AND PARSE_DATE('%d/%m/%Y', {CUBE}.trandate) >= DATE('2025-02-01')"
         description: Revenue transactions from Feb 2025 onwards (time-aligned denominator for RET004/RET005)
 
       - name: total_foreign_amount
