@@ -496,28 +496,3 @@ cubes:
       - category
     refresh_key:
       every: 365 days
-  - name: customer_geography
-    scheduled_refresh: false
-    measures:
-    - total_revenue
-    - units_sold
-    - transaction_count
-    dimensions:
-    - customer_email
-    - billing_country
-    - shipping_country
-    time_dimension: transaction_date
-    granularity: day
-    partition_granularity: month
-    build_range_end:
-      sql: SELECT '2025-10-31'
-    indexes:
-    - name: country_idx
-      columns:
-      - billing_country
-      - shipping_country
-    - name: customer_email_idx
-      columns:
-      - customer_email
-    refresh_key:
-      every: 365 days
