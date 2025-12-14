@@ -47,7 +47,7 @@ cubes:
         description: Number of shipping locations (approximate with HyperLogLog)
 
       - name: total_fulfillment_days
-        sql: "CAST(DATE_DIFF(CAST({CUBE}.shipdate AS DATE), CAST({transactions.trandate} AS DATE), DAY) AS FLOAT64)"
+        sql: "CAST(DATE_DIFF(CAST({CUBE}.shipdate AS DATE), PARSE_DATE('%d/%m/%Y', {transactions.trandate}), DAY) AS FLOAT64)"
         type: sum
         description: Total days from order to ship (for averaging)
 
