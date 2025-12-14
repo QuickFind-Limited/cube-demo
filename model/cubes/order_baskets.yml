@@ -72,7 +72,7 @@ cubes:
         description: "Order date - PARAMETERIZED: Use timeDimensions with dateRange (default: 'last 12 months')"
 
       - name: month
-        sql: "TIMESTAMP_TRUNC(TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate)), MONTH)"
+        sql: "TIMESTAMP_TRUNC({CUBE}.trandate, MONTH)"
         type: time
         description: Order month
 
