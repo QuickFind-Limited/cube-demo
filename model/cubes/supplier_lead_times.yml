@@ -13,14 +13,14 @@ cubes:
         TIMESTAMP(PARSE_DATE('%d/%m/%Y', po.trandate)) as po_date,
         po.tranid as po_number,
         po.entity as supplier_id,
-        DATE_DIFF(CAST(ir.trandate AS DATE), CAST(po.trandate AS DATE), DAY) as lead_time_days
+        DATE_DIFF(PARSE_DATE('%d/%m/%Y', ir.trandate), PARSE_DATE('%d/%m/%Y', po.trandate), DAY) as lead_time_days
       FROM demo.item_receipt_lines irl
       INNER JOIN demo.item_receipts ir ON CAST(irl.transaction AS INT64) = CAST(ir.id AS INT64)
       INNER JOIN demo.purchase_orders po ON CAST(irl.createdfrom AS INT64) = CAST(po.id AS INT64)
       WHERE irl.createdfrom IS NOT NULL
         AND irl.mainline = FALSE
         AND irl.item IS NOT NULL
-        AND DATE_DIFF(CAST(ir.trandate AS DATE), CAST(po.trandate AS DATE), DAY) BETWEEN 0 AND 365
+        AND DATE_DIFF(PARSE_DATE('%d/%m/%Y', ir.trandate), PARSE_DATE('%d/%m/%Y', po.trandate), DAY) BETWEEN 0 AND 365
 
     title: Supplier Lead Times
     description: PO to receipt lead time analysis using createdfrom linkage. Excludes landed costs and outliers (>365 days).
