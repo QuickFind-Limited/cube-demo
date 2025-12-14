@@ -1,21 +1,14 @@
 cubes:
 - name: transaction_lines
-  sql: "SELECT\n  tl.*,\n  t.type as transaction_type,\n  t.currency as transaction_currency,\n\
-    \  t.trandate as transaction_date,\n  t.status as transaction_status,\n  t.subsidiary\
-    \ as transaction_subsidiary,\n  t.custbody_customer_email as customer_email,\n\
-    \  t.billing_country,\n  t.shipping_country,\n  l.name as location_name,\n  --\
-    \ P5 FIX: Removed inline CASE statement - now using locations.channel_type via\
-    \ join\n  i.itemid as sku,\n  i.displayname as product_name,\n  i.custitem_gpc_category\
-    \ as category,\n  i.custitem_gpc_sections as section,\n  i.custitem_gpc_season\
-    \ as season,\n  i.custitem_gpc_size as size,\n  i.custitem_gpc_range as product_range,\n\
-    \  i.custitem_gpc_collection as collection,\n  i.custitem_gpc_child_colour as\
-    \ color,\n  i.baseprice as item_base_price,\n  t.exchangerate as transaction_exchange_rate,\n\
-    \  curr.name as currency_name,\n  d.name as department_name,\n  c.name as classification_name\n\
-    FROM demo.transaction_lines_clean tl LEFT JOIN demo.transactions_analysis t ON\
-    \ tl.transaction = t.id LEFT JOIN demo.currencies curr ON t.currency = curr.id\
-    \ LEFT JOIN demo.locations l ON tl.location = l.id LEFT JOIN demo.items i ON tl.item\
-    \ = i.id LEFT JOIN demo.departments d ON tl.department = d.id LEFT JOIN demo.classifications\
-    \ c ON tl.class = c.id WHERE tl.item != 25442\n"
+  sql: "SELECT\n    id,\n    transaction,\n    item,\n    department,\n    location,\n\
+    \    class,\n    amount,\n    quantity,\n    rate,\n    taxamount,\n    -- All\
+    \ fields below are now directly available (no JOINs needed)\n    transaction_type,\n\
+    \    transaction_date,\n    transaction_currency_id as transaction_currency,\n\
+    \    transaction_exchange_rate,\n    custbody_customer_email as customer_email,\n\
+    \    billing_country,\n    shipping_country,\n    sku,\n    product_name,\n   \
+    \ category,\n    section,\n    season,\n    size,\n    product_range,\n    collection,\n\
+    \    color,\n    baseprice as item_base_price,\n    currency_name,\n    location_name,\n\
+    \    department_name,\n    classification_name\n  FROM `magical-desktop.demo.transaction_lines_denormalized_mv`\n"
   title: Transaction Lines
   description: Line items from all transactions - the main fact table for metrics
     (denormalized)
