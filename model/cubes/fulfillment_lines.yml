@@ -93,12 +93,12 @@ cubes:
         description: Quantity shipped/received
 
       - name: shipdate
-        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.shipdate))"
+        sql: "TIMESTAMP({CUBE}.shipdate)"
         type: time
         description: Ship date
 
       - name: month
-        sql: "TIMESTAMP_TRUNC(TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.shipdate)), MONTH)"
+        sql: "TIMESTAMP_TRUNC(TIMESTAMP({CUBE}.shipdate), MONTH)"
         type: time
         description: Ship month
 

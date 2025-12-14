@@ -87,12 +87,12 @@ cubes:
         description: Days overdue
 
       - name: dateCreated
-        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.dateCreated))"
+        sql: "TIMESTAMP({CUBE}.dateCreated)"
         type: time
         description: Customer creation date
 
       - name: lastModifiedDate
-        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.lastModifiedDate))"
+        sql: "TIMESTAMP({CUBE}.lastModifiedDate)"
         type: time
         description: Last modification date
 

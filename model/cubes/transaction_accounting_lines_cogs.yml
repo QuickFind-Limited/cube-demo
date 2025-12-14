@@ -37,7 +37,7 @@ cubes:
         description: Account type (COGS)
 
       - name: transaction_date
-        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', trandate))"
+        sql: "TIMESTAMP(trandate)"
         type: time
         description: Transaction date
 
