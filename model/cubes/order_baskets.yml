@@ -3,7 +3,7 @@ cubes:
     sql: >
       SELECT
         tl.transaction as order_id,
-        CAST(t.trandate AS TIMESTAMP) as trandate,
+        TIMESTAMP(PARSE_DATE('%d/%m/%Y', t.trandate)) as trandate,
         t.type,
         t.custbody_customer_email as customer_email,
         t.billing_country,
@@ -23,7 +23,7 @@ cubes:
       FROM demo.transaction_lines_clean tl
       JOIN demo.transactions_clean t ON tl.transaction = t.id
       LEFT JOIN demo.b2b_customers b2b ON t.entity = b2b.id
-      GROUP BY tl.transaction, CAST(t.trandate AS TIMESTAMP), t.type, t.custbody_customer_email, t.billing_country, customer_type
+      GROUP BY tl.transaction, TIMESTAMP(PARSE_DATE('%d/%m/%Y', t.trandate)), t.type, t.custbody_customer_email, t.billing_country, customer_type
     title: Order Baskets
     description: Order-level basket analysis with line count buckets (BASK003)
 
@@ -72,7 +72,7 @@ cubes:
         description: "Order date - PARAMETERIZED: Use timeDimensions with dateRange (default: 'last 12 months')"
 
       - name: month
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), MONTH)"
+        sql: "TIMESTAMP_TRUNC(TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate)), MONTH)"
         type: time
         description: Order month
 

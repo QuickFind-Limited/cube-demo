@@ -8,9 +8,9 @@ cubes:
         irl.item,
         irl.quantity,
         irl.mainline,
-        CAST(ir.trandate AS TIMESTAMP) as receipt_date,
+        TIMESTAMP(PARSE_DATE('%d/%m/%Y', ir.trandate)) as receipt_date,
         ir.tranid as receipt_number,
-        CAST(po.trandate AS TIMESTAMP) as po_date,
+        TIMESTAMP(PARSE_DATE('%d/%m/%Y', po.trandate)) as po_date,
         po.tranid as po_number,
         po.entity as supplier_id,
         DATE_DIFF(CAST(ir.trandate AS DATE), CAST(po.trandate AS DATE), DAY) as lead_time_days
@@ -104,13 +104,13 @@ cubes:
         description: Days from PO to receipt
 
       - name: receipt_date
-        sql: "CAST({CUBE}.receipt_date AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.receipt_date))"
         type: time
         title: Receipt Date
         description: Date of item receipt
 
       - name: po_date
-        sql: "CAST({CUBE}.po_date AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.po_date))"
         type: time
         title: PO Date
         description: Purchase order date

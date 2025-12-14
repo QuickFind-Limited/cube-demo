@@ -11,7 +11,7 @@ cubes:
         (pol.quantity - COALESCE(pol.quantityshiprecv, 0)) as qty_on_order,
         (pol.quantity - COALESCE(pol.quantityshiprecv, 0)) * pol.unit_cost as line_on_order_value,
         po.status as po_status,
-        CAST(po.trandate AS TIMESTAMP) as po_date,
+        TIMESTAMP(PARSE_DATE('%d/%m/%Y', po.trandate)) as po_date,
         i.itemid,
         i.displayname
       FROM demo.purchase_order_lines pol
@@ -93,7 +93,7 @@ cubes:
         description: Purchase order status
 
       - name: po_date
-        sql: "CAST({CUBE}.po_date AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.po_date))"
         type: time
         title: PO Date
         description: Purchase order date

@@ -54,12 +54,12 @@ cubes:
         description: Fulfillment transaction ID (e.g., IF279014)
 
       - name: trandate
-        sql: "CAST({CUBE}.trandate AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate))"
         type: time
         description: Fulfillment date
 
       - name: month
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), MONTH)"
+        sql: "TIMESTAMP_TRUNC(TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate)), MONTH)"
         type: time
         description: Fulfillment month
 

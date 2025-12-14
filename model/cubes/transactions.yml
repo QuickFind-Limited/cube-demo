@@ -108,27 +108,27 @@ cubes:
         description: Human-readable transaction status
 
       - name: trandate
-        sql: "CAST({CUBE}.trandate AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate))"
         type: time
         description: Transaction date
 
       - name: month
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), MONTH)"
+        sql: "TIMESTAMP_TRUNC(TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate)), MONTH)"
         type: time
         description: Transaction month
 
       - name: quarter
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), QUARTER)"
+        sql: "TIMESTAMP_TRUNC(TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate)), QUARTER)"
         type: time
         description: Transaction quarter
 
       - name: year
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), YEAR)"
+        sql: "TIMESTAMP_TRUNC(TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate)), YEAR)"
         type: time
         description: Transaction year
 
       - name: week
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.trandate AS TIMESTAMP), WEEK)"
+        sql: "TIMESTAMP_TRUNC(TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate)), WEEK)"
         type: time
         description: Transaction week
 

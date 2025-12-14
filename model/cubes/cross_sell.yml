@@ -13,7 +13,7 @@ cubes:
         i1.custitem_gpc_sections as item_a_section,
         i2.custitem_gpc_sections as item_b_section,
         t.type as transaction_type,
-        CAST(t.trandate AS TIMESTAMP) as trandate,
+        TIMESTAMP(PARSE_DATE('%d/%m/%Y', t.trandate)) as trandate,
         CAST(COUNT(DISTINCT tl1.transaction) AS INT64) as co_purchase_count
       FROM demo.transaction_lines_clean tl1
       JOIN demo.transaction_lines_clean tl2 ON tl1.transaction = tl2.transaction AND tl1.item < tl2.item
@@ -25,7 +25,7 @@ cubes:
       GROUP BY tl1.item, tl2.item, i1.itemid, i2.itemid, i1.displayname, i2.displayname,
                i1.custitem_gpc_category, i2.custitem_gpc_category,
                i1.custitem_gpc_sections, i2.custitem_gpc_sections,
-               t.type, CAST(t.trandate AS TIMESTAMP)
+               t.type, TIMESTAMP(PARSE_DATE('%d/%m/%Y', t.trandate))
     title: Cross-Sell Analysis
     description: >
       Product affinity pairs by transaction date showing items purchased together (BASK002).

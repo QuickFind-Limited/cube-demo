@@ -3,7 +3,7 @@ cubes:
     sql: >
       SELECT
         irl.*,
-        CAST(ir.trandate AS TIMESTAMP) as receipt_date,
+        TIMESTAMP(PARSE_DATE('%d/%m/%Y', ir.trandate)) as receipt_date,
         i.displayname as item_displayname,
         i.itemid as item_sku
       FROM demo.item_receipt_lines irl

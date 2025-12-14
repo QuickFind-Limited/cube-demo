@@ -100,7 +100,7 @@ cubes:
         description: Cost per unit in base currency
 
       - name: trandate
-        sql: "CAST({CUBE}.trandate AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.trandate))"
         type: time
         title: PO Date
         description: Purchase order transaction date (from header via denormalization)

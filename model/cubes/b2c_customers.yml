@@ -125,12 +125,12 @@ cubes:
       # Now available as separate breakdown measures (invoice_orders, cash_sale_orders, salesord_orders)
 
       - name: first_order_date
-        sql: "CAST({CUBE}.first_order_date AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.first_order_date))"
         type: time
         description: Date of first order
 
       - name: last_order_date
-        sql: "CAST({CUBE}.last_order_date AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.last_order_date))"
         type: time
         description: Date of most recent order
 
@@ -158,9 +158,9 @@ cubes:
       - name: recency_bucket
         sql: >
           CASE
-            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)) THEN 'Active (30d)'
-            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)) THEN 'Recent (90d)'
-            WHEN CAST({CUBE}.last_order_date AS TIMESTAMP) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY)) THEN 'Lapsed (180d)'
+            WHEN TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.last_order_date)) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)) THEN 'Active (30d)'
+            WHEN TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.last_order_date)) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)) THEN 'Recent (90d)'
+            WHEN TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.last_order_date)) >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY)) THEN 'Lapsed (180d)'
             ELSE 'Dormant (180d+)'
           END
         type: string

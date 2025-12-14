@@ -81,7 +81,7 @@ cubes:
         description: "Transaction type (should always be ItemRcpt)"
 
       - name: receipt_date
-        sql: "CAST({CUBE}.receipt_date AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.receipt_date))"
         type: time
         description: "Date of item receipt"
 
