@@ -60,7 +60,7 @@ cubes:
         description: Purchase order transaction number
 
       - name: trandate
-        sql: trandate
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', trandate))"
         type: time
         title: PO Date
         description: Purchase order transaction date
