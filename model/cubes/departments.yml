@@ -12,7 +12,7 @@ cubes:
       - name: active_department_count
         type: count
         filters:
-          - sql: "{CUBE}.isinactive = 'F'"
+          - sql: "{CUBE}.isinactive = FALSE"
         description: Number of active departments
 
     dimensions:
@@ -38,12 +38,12 @@ cubes:
 
       - name: isinactive
         sql: "{CUBE}.isinactive"
-        type: string
-        description: Whether department is inactive (T/F)
+        type: boolean
+        description: Whether department is inactive
 
     segments:
       - name: active
-        sql: "{CUBE}.isinactive = 'F'"
+        sql: "{CUBE}.isinactive = FALSE"
 
     pre_aggregations:
       - name: department_analysis
