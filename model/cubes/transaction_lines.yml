@@ -377,27 +377,27 @@ cubes:
       # Queries should include timeDimensions with dateRange parameter
       # Override by specifying different dateRange in query
       - name: transaction_date
-        sql: "CAST({CUBE}.transaction_date AS TIMESTAMP)"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.transaction_date))"
         type: time
         description: "Transaction date - PARAMETERIZED: Use timeDimensions with dateRange (default: 'last 12 months')"
 
       - name: month
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.transaction_date AS TIMESTAMP), MONTH)"
+        sql: "TIMESTAMP_TRUNC({transaction_lines.transaction_date}, MONTH)"
         type: time
         description: Transaction month
 
       - name: quarter
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.transaction_date AS TIMESTAMP), QUARTER)"
+        sql: "TIMESTAMP_TRUNC({transaction_lines.transaction_date}, QUARTER)"
         type: time
         description: Transaction quarter
 
       - name: year
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.transaction_date AS TIMESTAMP), YEAR)"
+        sql: "TIMESTAMP_TRUNC({transaction_lines.transaction_date}, YEAR)"
         type: time
         description: Transaction year
 
       - name: week
-        sql: "TIMESTAMP_TRUNC(CAST({CUBE}.transaction_date AS TIMESTAMP), WEEK)"
+        sql: "TIMESTAMP_TRUNC({transaction_lines.transaction_date}, WEEK)"
         type: time
         description: Transaction week
 
