@@ -1,6 +1,6 @@
 cubes:
   - name: purchase_order_lines
-    sql_table: gpc.purchase_order_lines
+    sql_table: demo.purchase_order_lines
 
     title: Purchase Order Lines
     description: Purchase order line items with quantity, cost, and receipt tracking

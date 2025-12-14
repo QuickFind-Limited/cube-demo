@@ -14,9 +14,9 @@ cubes:
         CAST(po.trandate AS TIMESTAMP) as po_date,
         i.itemid,
         i.displayname
-      FROM gpc.purchase_order_lines pol
-      LEFT JOIN gpc.purchase_orders po ON pol.po_id = po.id
-      LEFT JOIN gpc.items i ON pol.item = i.id
+      FROM demo.purchase_order_lines pol
+      LEFT JOIN demo.purchase_orders po ON pol.po_id = po.id
+      LEFT JOIN demo.items i ON pol.item = i.id
       WHERE po.status IN ('B', 'D', 'E')
         AND (pol.quantity - COALESCE(pol.quantityshiprecv, 0)) > 0
 

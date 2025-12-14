@@ -1,6 +1,6 @@
 cubes:
   - name: classifications
-    sql: SELECT * FROM gpc.classifications
+    sql: SELECT * FROM demo.classifications
     title: Classifications
     description: Business classification hierarchy (EU Website, UK Website, Kildare Village, etc.)
 

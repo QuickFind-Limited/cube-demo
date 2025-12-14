@@ -1,6 +1,6 @@
 cubes:
   - name: fulfillment_lines
-    sql: SELECT * FROM gpc.fulfillment_lines
+    sql: SELECT * FROM demo.fulfillment_lines
     title: Fulfillment Lines
     description: Individual line items for fulfillments tracking what products were shipped
 

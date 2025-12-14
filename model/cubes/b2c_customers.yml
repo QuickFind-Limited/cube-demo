@@ -29,7 +29,7 @@ cubes:
         CAST(SUM(CASE WHEN t.type = 'CustInvc' THEN t.foreigntotal ELSE 0 END) AS FLOAT64) as invoice_revenue,
         CAST(SUM(CASE WHEN t.type = 'CashSale' THEN t.foreigntotal ELSE 0 END) AS FLOAT64) as cash_sale_revenue,
         CAST(SUM(CASE WHEN t.type = 'SalesOrd' THEN t.foreigntotal ELSE 0 END) AS FLOAT64) as salesord_revenue
-      FROM gpc.transactions_analysis t
+      FROM demo.transactions_analysis t
       WHERE t.custbody_customer_email IS NOT NULL
         AND t.custbody_customer_email != ''
       GROUP BY t.custbody_customer_email, t.billing_country

@@ -45,9 +45,9 @@ cubes:
         CAST(SUM(CASE WHEN t.type = 'CustInvc' THEN tl.amount ELSE 0 END) AS FLOAT64) as invoice_revenue,
         CAST(SUM(CASE WHEN t.type = 'CashSale' THEN tl.amount ELSE 0 END) AS FLOAT64) as cash_sale_revenue,
         CAST(SUM(CASE WHEN t.type = 'SalesOrd' THEN tl.amount ELSE 0 END) AS FLOAT64) as salesord_revenue
-      FROM gpc.transaction_lines tl
-      JOIN gpc.transactions_analysis t ON tl.transaction = t.id
-      LEFT JOIN gpc.locations l ON tl.location = l.id
+      FROM demo.transaction_lines tl
+      JOIN demo.transactions_analysis t ON tl.transaction = t.id
+      LEFT JOIN demo.locations l ON tl.location = l.id
       WHERE t.custbody_customer_email IS NOT NULL
         AND t.custbody_customer_email != ''
       GROUP BY

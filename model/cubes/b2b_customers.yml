@@ -1,6 +1,6 @@
 cubes:
   - name: b2b_customers
-    sql: SELECT * FROM gpc.b2b_customers
+    sql: SELECT * FROM demo.b2b_customers
     title: B2B Customers
     description: B2B wholesale customer master data with company info, tiers, and payment terms
 

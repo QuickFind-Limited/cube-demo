@@ -20,9 +20,9 @@ cubes:
           WHEN b2b.id IS NOT NULL THEN 'B2B/Wholesale'
           ELSE 'Retail/D2C'
         END as customer_type
-      FROM gpc.transaction_lines_clean tl
-      JOIN gpc.transactions_clean t ON tl.transaction = t.id
-      LEFT JOIN gpc.b2b_customers b2b ON t.entity = b2b.id
+      FROM demo.transaction_lines_clean tl
+      JOIN demo.transactions_clean t ON tl.transaction = t.id
+      LEFT JOIN demo.b2b_customers b2b ON t.entity = b2b.id
       GROUP BY tl.transaction, CAST(t.trandate AS TIMESTAMP), t.type, t.custbody_customer_email, t.billing_country, customer_type
     title: Order Baskets
     description: Order-level basket analysis with line count buckets (BASK003)
