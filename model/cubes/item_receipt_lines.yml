@@ -9,7 +9,7 @@ cubes:
       FROM demo.item_receipt_lines irl
       LEFT JOIN demo.item_receipts ir ON CAST(irl.transaction AS INT64) = CAST(ir.id AS INT64)
       LEFT JOIN demo.items i ON irl.item = i.id
-      WHERE irl.mainline = 'F'
+      WHERE irl.mainline = FALSE
 
     title: Item Receipt Lines
     description: Item receipt line items with PO linkage for lead time calculation. Excludes landed cost lines.
