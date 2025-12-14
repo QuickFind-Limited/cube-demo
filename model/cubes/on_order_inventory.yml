@@ -93,7 +93,7 @@ cubes:
         description: Purchase order status
 
       - name: po_date
-        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.po_date))"
+        sql: "{CUBE}.po_date"
         type: time
         title: PO Date
         description: Purchase order date
