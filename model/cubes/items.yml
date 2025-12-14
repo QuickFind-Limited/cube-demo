@@ -84,7 +84,7 @@ cubes:
         description: Product parent color
 
       - name: style_number
-        sql: "{CUBE}.custitem_gpc_style_number"
+        sql: "{CUBE}.custitem_gpc_stylenumber"
         type: string
         description: Style number
 
@@ -95,7 +95,7 @@ cubes:
 
       - name: is_inactive
         sql: "{CUBE}.isinactive"
-        type: string
+        type: boolean
         description: Whether item is inactive
 
       - name: cost
