@@ -12,7 +12,7 @@ cubes:
       - name: active_customer_count
         type: count
         filters:
-          - sql: "CAST({CUBE}.isInactive AS STRING) = 'False'"
+          - sql: "{CUBE}.isInactive = FALSE"
         description: Number of active B2B customers
 
       - name: total_balance
@@ -98,12 +98,12 @@ cubes:
 
       - name: isInactive
         sql: "{CUBE}.isInactive"
-        type: string
+        type: boolean
         description: Whether customer is inactive
 
       - name: isPerson
         sql: "{CUBE}.isPerson"
-        type: string
+        type: boolean
         description: Whether customer is individual (vs company)
 
       - name: customer_tier
@@ -163,12 +163,12 @@ cubes:
 
       - name: giveAccess
         sql: "{CUBE}.giveAccess"
-        type: string
+        type: boolean
         description: Whether customer has portal access
 
       - name: sendEmail
         sql: "{CUBE}.sendEmail"
-        type: string
+        type: boolean
         description: Whether to send email notifications
 
       - name: unbilledOrders
@@ -204,7 +204,7 @@ cubes:
 
     segments:
       - name: active_customers
-        sql: "CAST({CUBE}.isInactive AS STRING) = 'False'"
+        sql: "{CUBE}.isInactive = FALSE"
 
       - name: with_balance
         sql: "{CUBE}.balance != 0"
