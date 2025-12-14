@@ -486,7 +486,7 @@ cubes:
     - customer_type
     time_dimension: transaction_date
     granularity: day
-    partition_granularity: month
+    partition_granularity: week
     build_range_end:
       sql: SELECT '2025-10-31'
     indexes:
