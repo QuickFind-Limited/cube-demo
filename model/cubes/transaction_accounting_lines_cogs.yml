@@ -14,7 +14,7 @@ cubes:
         description: Composite primary key (transaction-id)
 
       - name: transaction_date
-        sql: "TIMESTAMP(PARSE_DATE('%m/%d/%Y', {CUBE}.transaction_date))"
+        sql: "TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.transaction_date))"
         type: time
         description: Transaction date
 
