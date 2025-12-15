@@ -29,9 +29,6 @@ cubes:
   - name: locations
     relationship: many_to_one
     sql: '{CUBE}.location_name = {locations.name}'
-  - name: transaction_accounting_lines_cogs
-    relationship: one_to_many
-    sql: '{CUBE}.transaction = {transaction_accounting_lines_cogs.transaction_id}'
   measures:
   - name: total_revenue
     sql: "CAST(CASE WHEN {CUBE}.transaction_type IN ('CustInvc', 'CashSale') THEN\n\
@@ -181,29 +178,6 @@ cubes:
     format: currency
     description: GMROI numerator component - use gross_margin for specified time period
       (e.g., YTD). Divide by inventory.inventory_value_at_cost to get GMROI ratio.
-  - name: gl_based_cogs
-    sql: '{transaction_accounting_lines_cogs.gl_cogs}'
-    type: number
-    format: currency
-    description: GL-based COGS from TransactionAccountingLine (ACCURATE - replaces
-      total_cost which uses corrupt costestimate field). This is the authoritative
-      source of truth for cost of goods sold.
-  - name: gl_based_gross_margin
-    sql: '{total_revenue} - {gl_based_cogs}'
-    type: number
-    format: currency
-    description: Gross margin using GL-based COGS (ACCURATE - replaces gross_margin
-      which uses corrupt costestimate). Revenue minus accurate GL COGS.
-  - name: gl_based_gross_margin_pct
-    sql: 100.0 * ({total_revenue} - {gl_based_cogs}) / NULLIF({total_revenue}, 0)
-    type: number
-    description: Gross margin percentage using GL-based COGS (ACCURATE - replaces
-      gross_margin_percent which uses corrupt costestimate)
-  - name: gl_based_gmroi
-    sql: ({total_revenue} - {gl_based_cogs}) / NULLIF({gl_based_cogs}, 0)
-    type: number
-    description: 'GMROI using GL-based COGS (ACCURATE - Gross Margin Return on Investment).
-      Formula: (Revenue - GL COGS) / GL COGS'
   - name: total_landed_costs
     sql: CAST(CASE WHEN {CUBE}.transaction_type = 'ItemRcpt' AND {CUBE}.blandedcost
       = TRUE THEN {CUBE}.amount ELSE 0 END AS FLOAT64)
@@ -493,46 +467,3 @@ cubes:
       - category
     refresh_key:
       every: 365 days
-
-  - name: cogs_analysis
-    scheduled_refresh: false
-    measures:
-      - gl_based_cogs
-      - gl_based_gross_margin
-      - gl_based_gross_margin_pct
-      - total_cost
-      - gross_margin
-    dimensions:
-      - channel_type
-      - category
-      - section
-      - season
-      - product_range
-      - collection
-      - department_name
-      - billing_country
-      - shipping_country
-      - classification_name
-      - transaction_currency
-      - currency_name
-      - transaction_type
-      - pricing_type
-      - sku
-      - product_name
-      - size
-      - color
-      - location_name
-      - customer_type
-    time_dimension: transaction_date
-    granularity: day
-    partition_granularity: week
-    build_range_end:
-      sql: SELECT '2025-10-31'
-    indexes:
-      - name: channel_category_idx
-        columns:
-          - channel_type
-          - category
-    refresh_key:
-      every: 365 days
-
