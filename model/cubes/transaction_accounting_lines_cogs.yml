@@ -1,76 +1,129 @@
 cubes:
   - name: transaction_accounting_lines_cogs
-    sql_table: demo.transaction_accounting_lines_cogs
+    sql_table: demo.transaction_lines_with_cogs
     title: COGS Accounting Lines
     description: GL-based COGS from TransactionAccountingLine (accurate source of truth for cost of goods sold)
 
-    joins:
-      - name: transaction_lines
-        relationship: many_to_one
-        sql: "{CUBE}.transaction = {transaction_lines.transaction}"
+    # No joins needed - all data is denormalized in the view
 
     dimensions:
       - name: id
-        sql: "CONCAT(CAST({CUBE}.transaction AS STRING), '-', CAST({CUBE}.transactionline AS STRING))"
+        sql: "CONCAT(CAST({CUBE}.transaction AS STRING), '-', CAST({CUBE}.id AS STRING))"
         type: string
         primary_key: true
-        description: Composite primary key (transaction-transactionline)
-
-      - name: account_id
-        sql: account
-        type: number
-        description: Account ID (FK to Account table)
-
-      - name: account_name
-        sql: account_name
-        type: string
-        description: "Account full name (e.g., Cost of Goods Sold - Cost of Goods Solds - Purchases)"
-
-      - name: account_number
-        sql: acctnumber
-        type: string
-        description: Account number (e.g., "6100")
-
-      - name: account_type
-        sql: accttype
-        type: string
-        description: Account type (COGS)
+        description: Composite primary key (transaction-id)
 
       - name: transaction_date
-        sql: "TIMESTAMP(trandate)"
+        sql: "TIMESTAMP(PARSE_DATE('%m/%d/%Y', {CUBE}.transaction_date))"
         type: time
         description: Transaction date
 
-      - name: transaction_id
-        sql: transaction
-        type: number
-        description: Transaction ID (FK to Transaction table)
+      # Denormalized dimensions from the view
+      - name: transaction_type
+        sql: transaction_type
+        type: string
+        description: Transaction type (CustInvc, CashSale, etc.)
 
-      - name: transactionline_id
-        sql: transactionline
-        type: number
-        description: Transaction line ID
+      - name: category
+        sql: category
+        type: string
+        description: Product category
 
-      - name: posting_flag
-        sql: posting
-        type: boolean
-        description: "Posting flag: true (posted) or false (not posted)"
+      - name: section
+        sql: section
+        type: string
+        description: Product section
+
+      - name: season
+        sql: season
+        type: string
+        description: Product season
+
+      - name: product_range
+        sql: product_range
+        type: string
+        description: Product range
+
+      - name: collection
+        sql: collection
+        type: string
+        description: Product collection
+
+      - name: department_name
+        sql: department_name
+        type: string
+        description: Department name
+
+      - name: billing_country
+        sql: billing_country
+        type: string
+        description: Billing country
+
+      - name: shipping_country
+        sql: shipping_country
+        type: string
+        description: Shipping country
+
+      - name: classification_name
+        sql: classification_name
+        type: string
+        description: Classification name
+
+      - name: transaction_currency
+        sql: CAST(transaction_currency AS STRING)
+        type: string
+        description: Transaction currency ID
+
+      - name: currency_name
+        sql: currency_name
+        type: string
+        description: Currency name
+
+      - name: sku
+        sql: sku
+        type: string
+        description: Product SKU
+
+      - name: product_name
+        sql: product_name
+        type: string
+        description: Product name
+
+      - name: size
+        sql: size
+        type: string
+        description: Product size
+
+      - name: color
+        sql: color
+        type: string
+        description: Product color
+
+      - name: location_name
+        sql: location_name
+        type: string
+        description: Location name
+
+      - name: cogs_account_name
+        sql: gl_cogs_account_name
+        type: string
+        description: COGS account name
 
     measures:
       - name: gl_cogs
-        sql: amount
+        sql: gl_cogs_amount
         type: sum
         format: currency
         description: "GL-based COGS (sum of all COGS account postings) - ACCURATE source of truth, replaces corrupt total_cost field"
 
       - name: gl_cogs_debit
-        sql: debit
+        sql: gl_cogs_debit
         type: sum
         format: currency
         description: Total COGS debit amounts
 
       - name: gl_cogs_credit
-        sql: credit
+        sql: gl_cogs_credit
         type: sum
         format: currency
         description: Total COGS credit amounts
@@ -78,3 +131,38 @@ cubes:
       - name: cogs_entry_count
         type: count
         description: Number of COGS GL entries
+
+    pre_aggregations:
+      - name: cogs_analysis
+        scheduled_refresh: false
+        measures:
+          - gl_cogs
+          - gl_cogs_debit
+          - gl_cogs_credit
+          - cogs_entry_count
+        dimensions:
+          - transaction_type
+          - category
+          - section
+          - season
+          - product_range
+          - collection
+          - department_name
+          - billing_country
+          - shipping_country
+          - classification_name
+          - transaction_currency
+          - currency_name
+          - sku
+          - product_name
+          - size
+          - color
+          - location_name
+          - cogs_account_name
+        time_dimension: transaction_date
+        granularity: day
+        partition_granularity: week
+        build_range_end:
+          sql: SELECT '2025-10-31'
+        refresh_key:
+          every: 365 days
