@@ -455,8 +455,11 @@ cubes:
     - line_count
     - transaction_count
     - total_discount_amount
+    - total_base_price_for_discount
     - salesord_revenue
     - salesord_count
+    - min_transaction_date
+    - max_transaction_date
     dimensions:
     - channel_type
     - category
@@ -483,6 +486,13 @@ cubes:
     partition_granularity: week
     build_range_end:
       sql: SELECT '2025-10-31'
+    indexes:
+    - name: channel_category_idx
+      columns:
+      - channel_type
+      - category
+    refresh_key:
+      every: 365 days
 
   # COGS-only pre-aggregation
   - name: cogs_analysis
@@ -519,3 +529,10 @@ cubes:
     partition_granularity: week
     build_range_end:
       sql: SELECT '2025-10-31'
+    indexes:
+    - name: channel_category_idx
+      columns:
+      - channel_type
+      - category
+    refresh_key:
+      every: 365 days
