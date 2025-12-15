@@ -1,8 +1,8 @@
 cubes:
 - name: transaction_lines
   sql: "SELECT\n    id,\n    transaction,\n    item,\n    department,\n    location,\n\
-    \    class,\n    amount,\n    quantity,\n    rate,\n    taxamount,\n    -- All\
-    \ fields below are now directly available (no JOINs needed)\n    transaction_type,\n\
+    \    class,\n    amount,\n    quantity,\n    rate,\n    taxamount,\n    costestimate,\n\
+    \    -- All fields below are now directly available (no JOINs needed)\n    transaction_type,\n\
     \    transaction_date,\n    transaction_currency_id as transaction_currency,\n\
     \    transaction_exchange_rate,\n    custbody_customer_email as customer_email,\n\
     \    billing_country,\n    shipping_country,\n    sku,\n    product_name,\n   \
