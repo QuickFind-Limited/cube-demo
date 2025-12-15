@@ -292,7 +292,7 @@ cubes:
     description: Currency code (EUR, GBP, USD, AUD, etc.) - use this for currency
       breakdowns
   - name: transaction_date
-    sql: TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.transaction_date))
+    sql: TIMESTAMP({CUBE}.transaction_date)
     type: time
     description: 'Transaction date - PARAMETERIZED: Use timeDimensions with dateRange
       (default: ''last 12 months'')'
