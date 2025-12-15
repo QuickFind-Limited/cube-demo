@@ -310,10 +310,18 @@ cubes:
     type: string
     description: Location name
   - name: channel_type
-    sql: '{locations.channel_type}'
+    sql: >
+      CASE
+        WHEN {CUBE}.department = 109 THEN 'D2C'
+        WHEN {CUBE}.department = 108 THEN 'RETAIL'
+        WHEN {CUBE}.department = 207 THEN 'B2B_MARKETPLACE'
+        WHEN {CUBE}.department = 206 THEN 'B2B_WHOLESALE'
+        WHEN {CUBE}.department_name LIKE '%Wholesale%' THEN 'B2B_WHOLESALE'
+        WHEN {CUBE}.department_name LIKE '%Event%' THEN 'EVENTS'
+        ELSE 'OTHER'
+      END
     type: string
-    description: 'Channel type: D2C, RETAIL, B2B_WHOLESALE, PARTNER, EVENTS, OTHER
-      (via locations cube - single source of truth)'
+    description: 'Channel type based on department field (SKILL v62 fix): D2C (dept 109), RETAIL (dept 108), B2B_MARKETPLACE (dept 207), B2B_WHOLESALE (dept 206)'
   - name: sku
     sql: '{CUBE}.sku'
     type: string
