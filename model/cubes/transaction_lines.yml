@@ -299,7 +299,7 @@ cubes:
     description: Currency code (EUR, GBP, USD, AUD, etc.) - use this for currency
       breakdowns
   - name: transaction_date
-    sql: TIMESTAMP(PARSE_DATE('%d/%m/%Y', {CUBE}.transaction_date))
+    sql: TIMESTAMP(PARSE_DATE('%m/%d/%Y', {CUBE}.transaction_date))
     type: time
     description: 'Transaction date - PARAMETERIZED: Use timeDimensions with dateRange
       (default: ''last 12 months'')'
@@ -443,24 +443,18 @@ cubes:
   - name: revenue_transactions
     sql: '{CUBE}.transaction_type IN (''CustInvc'', ''CashSale'')'
   pre_aggregations:
-  - name: sales_analysis
+  # Revenue-only pre-aggregation
+  - name: revenue_analysis
     scheduled_refresh: false
     measures:
     - total_revenue
     - net_revenue
     - units_sold
     - units_returned
-    - gross_margin
-    - total_cost
-    - gl_based_cogs
-    - gl_based_gross_margin
     - total_tax
     - line_count
-    - min_transaction_date
-    - max_transaction_date
-    - total_discount_amount
-    - total_base_price_for_discount
     - transaction_count
+    - total_discount_amount
     - salesord_revenue
     - salesord_count
     dimensions:
@@ -489,10 +483,39 @@ cubes:
     partition_granularity: week
     build_range_end:
       sql: SELECT '2025-10-31'
-    indexes:
-    - name: channel_category_idx
-      columns:
-      - channel_type
-      - category
-    refresh_key:
-      every: 365 days
+
+  # COGS-only pre-aggregation
+  - name: cogs_analysis
+    scheduled_refresh: false
+    measures:
+    - gl_based_cogs
+    - gl_based_gross_margin
+    - gl_based_gross_margin_pct
+    - total_cost
+    - gross_margin
+    dimensions:
+    - channel_type
+    - category
+    - section
+    - season
+    - product_range
+    - collection
+    - department_name
+    - billing_country
+    - shipping_country
+    - classification_name
+    - transaction_currency
+    - currency_name
+    - transaction_type
+    - pricing_type
+    - sku
+    - product_name
+    - size
+    - color
+    - location_name
+    - customer_type
+    time_dimension: transaction_date
+    granularity: day
+    partition_granularity: week
+    build_range_end:
+      sql: SELECT '2025-10-31'
