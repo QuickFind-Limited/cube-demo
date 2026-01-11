@@ -161,7 +161,7 @@ cubes:
           - cogs_account_name
         time_dimension: transaction_date
         granularity: day
-        partition_granularity: week
+        partition_granularity: day
         build_range_end:
           sql: SELECT '2025-10-31'
         refresh_key:
