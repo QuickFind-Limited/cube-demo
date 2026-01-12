@@ -17,7 +17,7 @@ cubes:
     \ = i.id LEFT JOIN demo.departments d ON tl.department = d.id LEFT JOIN demo.classifications\
     \ c ON tl.class = c.id WHERE tl.item != 25442\n"
   title: Transaction Lines
-  description: Line items from all transactions - the main fact table for metrics
+  description: Line items from all transactions - the main fact table for revenue metrics
     (denormalized)
   joins:
   - name: transactions
