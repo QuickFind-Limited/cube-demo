@@ -427,7 +427,7 @@ cubes:
   pre_aggregations:
   # Revenue-only pre-aggregation
   - name: revenue_analysis
-    scheduled_refresh: false
+    scheduled_refresh: true
     measures:
     - total_revenue
     - net_revenue
