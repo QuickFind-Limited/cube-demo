@@ -105,7 +105,7 @@ cubes:
 
     pre_aggregations:
       - name: on_order_rollup
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - total_on_order_units
           - on_order_value
@@ -123,7 +123,7 @@ cubes:
 
       # Rollup without dimensions for total queries
       - name: on_order_totals
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - total_on_order_units
           - on_order_value

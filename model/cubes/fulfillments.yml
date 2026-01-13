@@ -102,7 +102,7 @@ cubes:
     pre_aggregations:
       # Fulfillment status analysis
       - name: fulfillment_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - fulfillment_count
           - unique_orders

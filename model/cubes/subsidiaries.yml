@@ -37,7 +37,7 @@ cubes:
 
     pre_aggregations:
       - name: subsidiary_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - subsidiary_count
         dimensions:

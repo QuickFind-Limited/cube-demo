@@ -135,7 +135,7 @@ cubes:
 
     pre_aggregations:
       - name: item_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - item_count
           - active_item_count

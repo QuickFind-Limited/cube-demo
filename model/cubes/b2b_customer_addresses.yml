@@ -97,7 +97,7 @@ cubes:
 
     pre_aggregations:
       - name: customer_address_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - address_count
           - customer_count

@@ -154,7 +154,7 @@ cubes:
 
     pre_aggregations:
       - name: lead_time_rollup
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - receipt_count
           - total_qty_received

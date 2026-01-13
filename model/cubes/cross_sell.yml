@@ -139,7 +139,7 @@ cubes:
     # Non-partitioned to avoid partial build issues
     pre_aggregations:
       - name: cross_sell_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - pair_count
           - total_co_purchases

@@ -134,7 +134,7 @@ cubes:
 
     pre_aggregations:
       - name: cogs_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - gl_cogs
           - gl_cogs_debit

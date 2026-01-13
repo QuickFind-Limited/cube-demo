@@ -133,7 +133,7 @@ cubes:
       # V57: Added customer_type for B2B/Wholesale vs Retail/D2C segmentation
       # Non-partitioned to avoid partial build issues
       - name: basket_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - order_count
           - total_revenue

@@ -147,7 +147,7 @@ cubes:
       # Note: Uses measures-only rollup with denormalized receipt_date dimension.
       # Item dimensions (category, section, etc.) can be added at query time via items join.
       - name: dc_intake_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - total_received_qty
           - dc_intake_units
@@ -166,7 +166,7 @@ cubes:
       # NOTE: avg_unit_cost removed - type:avg measures don't work in dimensional rollups
       # Users can calculate avg at query time: total_receipt_line_value / total_received_qty
       - name: item_receiving_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - total_received_qty
           - total_receipt_line_value

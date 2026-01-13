@@ -132,7 +132,7 @@ cubes:
     pre_aggregations:
       # Inventory analysis by location and item attributes
       - name: inventory_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - total_stock
           - available_stock
@@ -161,7 +161,7 @@ cubes:
 
       # Item-level inventory (for SKU lookups)
       - name: item_inventory
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - total_stock
           - available_stock

@@ -42,7 +42,7 @@ cubes:
 
     pre_aggregations:
       - name: classification_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - classification_count
           - active_count

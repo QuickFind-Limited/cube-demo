@@ -32,7 +32,7 @@ cubes:
 
     pre_aggregations:
       - name: currency_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - currency_count
         dimensions:

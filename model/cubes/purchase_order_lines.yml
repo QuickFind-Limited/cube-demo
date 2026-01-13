@@ -116,7 +116,7 @@ cubes:
 
     pre_aggregations:
       - name: on_order_summary
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - total_outstanding_qty
           - on_order_value

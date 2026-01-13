@@ -109,7 +109,7 @@ cubes:
     pre_aggregations:
       # Fulfillment line analysis
       - name: fulfillment_lines_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - line_count
           - units_shipped
@@ -134,7 +134,7 @@ cubes:
 
       # Item-level fulfillment tracking
       - name: item_fulfillment_analysis
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - units_shipped
           - fulfillment_count
@@ -154,7 +154,7 @@ cubes:
 
       # Snapshot pre-agg for location-based queries without time filtering
       - name: location_snapshot
-        scheduled_refresh: false
+        scheduled_refresh: true
         measures:
           - fulfillment_count
           - line_count
