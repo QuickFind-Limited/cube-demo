@@ -29,10 +29,10 @@ cubes:
   - name: locations
     relationship: many_to_one
     sql: '{CUBE}.location_name = {locations.name}'
+  # Join to GL-based COGS for accurate cost of goods sold (added from cube-gpc)
   - name: transaction_accounting_lines_cogs
     relationship: one_to_many
     sql: '{CUBE}.transaction = {transaction_accounting_lines_cogs.transaction_id}'
-    description: 'Join to GL-based COGS for accurate cost of goods sold (added from cube-gpc)'
   measures:
   - name: total_revenue
     sql: "CAST(CASE WHEN {CUBE}.transaction_type IN ('CustInvc', 'CashSale') THEN\n\
