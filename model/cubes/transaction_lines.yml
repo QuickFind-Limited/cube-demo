@@ -29,6 +29,10 @@ cubes:
   - name: locations
     relationship: many_to_one
     sql: '{CUBE}.location_name = {locations.name}'
+  - name: transaction_accounting_lines_cogs
+    relationship: one_to_many
+    sql: '{CUBE}.transaction = {transaction_accounting_lines_cogs.transaction_id}'
+    description: 'Join to GL-based COGS for accurate cost of goods sold (added from cube-gpc)'
   measures:
   - name: total_revenue
     sql: "CAST(CASE WHEN {CUBE}.transaction_type IN ('CustInvc', 'CashSale') THEN\n\
@@ -172,6 +176,27 @@ cubes:
     format: currency
     description: Gross Profit (alias for gross_margin) - Revenue minus COGS. Same
       as gross_margin measure, provided for clarity in AI queries.
+  # GL-Based COGS Measures (ACCURATE - added from cube-gpc)
+  # These measures use TransactionAccountingLine GL postings for accurate COGS
+  # The old gross_margin/gross_margin_percent measures above use costestimate field which is corrupt
+  - name: gl_based_cogs
+    sql: '{transaction_accounting_lines_cogs.gl_cogs}'
+    type: number
+    format: currency
+    description: 'GL-based COGS from TransactionAccountingLine (ACCURATE - replaces total_cost which uses corrupt costestimate field). This is the authoritative source of truth for cost of goods sold.'
+  - name: gl_based_gross_margin
+    sql: '{total_revenue} - {gl_based_cogs}'
+    type: number
+    format: currency
+    description: 'Gross margin using GL-based COGS (ACCURATE - replaces gross_margin which uses corrupt costestimate). Revenue minus accurate GL COGS.'
+  - name: gl_based_gross_margin_pct
+    sql: '100.0 * ({total_revenue} - {gl_based_cogs}) / NULLIF({total_revenue}, 0)'
+    type: number
+    description: 'Gross margin percentage using GL-based COGS (ACCURATE - replaces gross_margin_percent which uses corrupt costestimate)'
+  - name: gl_based_gmroi
+    sql: '({total_revenue} - {gl_based_cogs}) / NULLIF({gl_based_cogs}, 0)'
+    type: number
+    description: 'GMROI using GL-based COGS (ACCURATE - Gross Margin Return on Investment). Formula: (Revenue - GL COGS) / GL COGS'
   - name: gmroi_numerator
     sql: '{gross_margin}'
     type: number
@@ -473,5 +498,33 @@ cubes:
       columns:
       - channel_type
       - category
+    refresh_key:
+      every: 365 days
+
+  # Customer-focused pre-agg for customer email queries
+  # Isolated to prevent high cardinality from bloating main pre-agg
+  - name: customer_geography
+    measures:
+    - total_revenue
+    - net_revenue
+    - units_sold
+    - transaction_count
+    dimensions:
+    - customer_email
+    - billing_country
+    - shipping_country
+    time_dimension: transaction_date
+    granularity: day
+    partition_granularity: day
+    build_range_end:
+      sql: SELECT '2025-10-31'
+    indexes:
+    - name: country_idx
+      columns:
+      - billing_country
+      - shipping_country
+    - name: customer_email_idx
+      columns:
+      - customer_email
     refresh_key:
       every: 365 days
